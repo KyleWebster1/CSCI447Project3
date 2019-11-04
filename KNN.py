@@ -531,67 +531,68 @@ class main:
         else:
             print("Mean Absolute Percentage Error: {:0.2f}%".format(overall_accuracy))
 
-    knn_instance = k_nearest_neighbor()
+    def execute(self):
+        knn_instance = k_nearest_neighbor()
 
-    # for each classification data set
-    for f in files:
-        # method will be True for classification, false for regression
-        method = True
-        if (f in regression):
-            method = False
+        # for each classification data set
+        for f in self.files:
+            # method will be True for classification, false for regression
+            method = True
+            if (f in self.regression):
+                method = False
 
-        # import and process data set
-        print("//////////\n{}\n//////////".format(f))
-        print("Pre-Processing")
-        p = pre_processing(f)
-        inData = []
-        # Categorical classification datasets converted
-        if f in classification:
-            print("Processing Categorical Classification using Similarity Matrix")
-            inData = p.processClassification(p.getData(), f)
-        else:
-            inData = p.getData()
-        randomizedData = randomizeData(inData)
-        data = dataset(randomizedData)
+            # import and process data set
+            print("//////////\n{}\n//////////".format(f))
+            print("Pre-Processing")
+            p = pre_processing(f)
+            inData = []
+            # Categorical classification datasets converted
+            if f in self.classification:
+                print("Processing Categorical Classification using Similarity Matrix")
+                inData = p.processClassification(p.getData(), f)
+            else:
+                inData = p.getData()
+            randomizedData = randomizeData(inData)
+            data = dataset(randomizedData)
 
-        # get all training sets
-        training_sets = data.getTrainingSet()
-        test_sets = data.getTestSet()
-        edited_sets = None
-        condensed_sets = None
-        # Execute edited and condensed sets if classification datasets
-        if (method):
-            edited_sets = knn_instance.editSets(training_sets, test_sets, 3)
-            condensed_sets = knn_instance.condenseSets(training_sets, test_sets, 3)
-        centroidsMeans = []
-        print("Processing K-Means")
-        if (method):  # if classification, use the len of the edited knn as the number of clusters
-            for j, i in enumerate(edited_sets):
-                centroidsMeans.append(knn_instance.kMeans(training_sets[j], len(i)))
-        else:  # if regression, use 1/4 n with n being the size of the dataset
-            for tset in training_sets:
-                centroidsMeans.append(knn_instance.kMeans(tset, int(len(tset) / 4)))
-        centroidsPAM = []
-        print("Processing K-PAM")
-        if (method):  # if classification, use the len of the edited knn as the number of clusters
-            for j, i in enumerate(edited_sets):
-                centroidsPAM.append(knn_instance.kMedoids(training_sets[j], len(i)))
-        else:  # if regression, use 1/4 n with n being the size of the dataset
-            for tset in training_sets:
-                centroidsPAM.append(knn_instance.kMedoids(tset, int(len(tset) / 4)))
-
-        # for each value of k, run algorithms
-        for k in [1, 3, 5]:
-            print("\n//////////\nk = " + repr(k) + "\n//////////")
-            print("K-NN")
-            run_knn(method, knn_instance, training_sets, test_sets, k)
-            # We only run edited and condensed on classification datasets (method = True)
+            # get all training sets
+            training_sets = data.getTrainingSet()
+            test_sets = data.getTestSet()
+            edited_sets = None
+            condensed_sets = None
+            # Execute edited and condensed sets if classification datasets
             if (method):
-                print("Edited K-NN")
-                run_knn(method, knn_instance, edited_sets, test_sets, k)
-                print("Condensed K-NN")
-                run_knn(method, knn_instance, condensed_sets, test_sets, k)
-            print("K-Means Clustering")
-            run_knn(method, knn_instance, centroidsMeans, test_sets, k)
-            print("Partitioning Around Medoids Clustering")
-            run_knn(method, knn_instance, centroidsPAM, test_sets, k)
+                edited_sets = knn_instance.editSets(training_sets, test_sets, 3)
+                condensed_sets = knn_instance.condenseSets(training_sets, test_sets, 3)
+            centroidsMeans = []
+            print("Processing K-Means")
+            if (method):  # if classification, use the len of the edited knn as the number of clusters
+                for j, i in enumerate(edited_sets):
+                    centroidsMeans.append(knn_instance.kMeans(training_sets[j], len(i)))
+            else:  # if regression, use 1/4 n with n being the size of the dataset
+                for tset in training_sets:
+                    centroidsMeans.append(knn_instance.kMeans(tset, int(len(tset) / 4)))
+            centroidsPAM = []
+            print("Processing K-PAM")
+            if (method):  # if classification, use the len of the edited knn as the number of clusters
+                for j, i in enumerate(edited_sets):
+                    centroidsPAM.append(knn_instance.kMedoids(training_sets[j], len(i)))
+            else:  # if regression, use 1/4 n with n being the size of the dataset
+                for tset in training_sets:
+                    centroidsPAM.append(knn_instance.kMedoids(tset, int(len(tset) / 4)))
+
+            # for each value of k, run algorithms
+            for k in [1, 3, 5]:
+                print("\n//////////\nk = " + repr(k) + "\n//////////")
+                print("K-NN")
+                self.run_knn(method, knn_instance, training_sets, test_sets, k)
+                # We only run edited and condensed on classification datasets (method = True)
+                if (method):
+                    print("Edited K-NN")
+                    self.run_knn(method, knn_instance, edited_sets, test_sets, k)
+                    print("Condensed K-NN")
+                    self.run_knn(method, knn_instance, condensed_sets, test_sets, k)
+                print("K-Means Clustering")
+                self.run_knn(method, knn_instance, centroidsMeans, test_sets, k)
+                print("Partitioning Around Medoids Clustering")
+                self.run_knn(method, knn_instance, centroidsPAM, test_sets, k)

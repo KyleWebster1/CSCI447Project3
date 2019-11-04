@@ -18,10 +18,10 @@ class ff_neural_net:
         #create network
 
         #initialize weights to zero
-        
+
     def train(self,training_rate,momentum):
         #TODO
-    
+
     def test(self):
         result = None
         #TODO
