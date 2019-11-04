@@ -5,6 +5,8 @@
 # Greg Martin
 
 import math
+import FFN
+import RBF
 import random
 import time
 from operator import add
