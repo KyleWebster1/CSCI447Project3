@@ -13,7 +13,7 @@ class neuron:
     def getW(self):
         return self.w
     
-    def setW(self, w)
+    def setW(self, w):
         self.w = w
 
 class ff_neural_net:

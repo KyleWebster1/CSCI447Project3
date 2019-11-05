@@ -35,7 +35,11 @@ class rb_neural_net:
         self.gaussians = gaussians
 
         #TODO
-        
+
+    def gaussian_rbf(x,u,sigma):
+        rbf = (-((x-u)**2 )/(2* sigma**2))
+        return rbf
+    
     def train(self, k, momentum):
         """
         :param k:
@@ -63,5 +67,6 @@ class rb_neural_net:
         result = None
         #TODO
         return result
+
         
     
