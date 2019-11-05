@@ -3,12 +3,16 @@
 # Matt Wintersteen
 # Kyle Webster
 # Greg Martin
+import random
 
-class neuron:
+class Neuron:
     #neuron is created with a weight
     #not sure how to represent activation function in this class
     def __init__(self, w):
         self.w = w
+
+    def __str__(self):
+        return str(self.w)
         
     def getW(self):
         return self.w
@@ -22,8 +26,6 @@ class ff_neural_net:
 
         Attributes
         ----------
-        training_set: The training values
-        test_set: The values to test the model with
         outputs: The number of outputs
         num_hidden_layers: The number of hidden layers
         num_hidden_nodes: The number of hidden nodes
@@ -45,16 +47,28 @@ class ff_neural_net:
         activation(i, j)
         """
 
-    def __init__(self, training_set, test_set, outputs, num_hidden_layers, num_hidden_nodes):
-        self.training_set = training_set
-        self.test_set = test_set
-        self.outputs = outputs
+    def __init__(self, num_inputs, num_outputs, num_hidden_layers, num_hidden_nodes):
+        self.num_inputs = num_inputs
+        self.num_outputs = num_outputs
         self.num_hidden_layers = num_hidden_layers
         self.num_hidden_nodes = num_hidden_nodes
-        # TODO
-        # create network
 
-        # initialize weights to zero
+        # initialize weights for hidden layers
+        self.hWeights = []
+        for i in range(self.num_hidden_layers):
+            layer_w = []
+            for j in range(self.num_hidden_nodes):
+                neuron = Neuron(random.random())
+                layer_w.append(neuron)
+            self.hWeights.append(layer_w)
+
+        self.oWeights = []
+        for j in range(self.num_outputs):
+            neuron = Neuron(random.random())
+            self.oWeights.append(neuron)
+                
+        
+        
 
     def dot(self, x, w, b):
         """Apply a dot product with a weight value and add a bias onto a vector x
