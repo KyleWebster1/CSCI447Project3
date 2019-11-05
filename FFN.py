@@ -4,9 +4,6 @@
 # Kyle Webster
 # Greg Martin
 
-import KNN
-import FFN
-
 
 class ff_neural_net:
     """
