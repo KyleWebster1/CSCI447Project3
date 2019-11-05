@@ -4,6 +4,17 @@
 # Kyle Webster
 # Greg Martin
 
+class neuron:
+    #neuron is created with a weight
+    #not sure how to represent activation function in this class
+    def __init__(self, w):
+        self.w = w
+        
+    def getW(self):
+        return self.w
+    
+    def setW(self, w)
+        self.w = w
 
 class ff_neural_net:
     """
