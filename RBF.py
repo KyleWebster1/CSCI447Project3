@@ -41,9 +41,9 @@ class rb_neural_net:
         self.weights = [[]]
 
         for j in range(0, outputs):
-            self.weights.append(m)
+            self.weights.append([])
             for i in range(0, gaussians):
-                self.weights[j].append(random)
+                self.weights[j].append(random.random())
 
         # find gaussians unsupervised
         knn_instance = KNN.k_nearest_neighbor()
