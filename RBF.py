@@ -107,12 +107,11 @@ class rb_neural_net:
         :param j:
         :return:
         """
-        diffVect = vector_subtract(input, gaussians[i]);
+        diffVect = vector_subtract(input, gaussians[i])
         diffMagSqr = vector_magnitude_squared(diffVect)
         sigma = 1
 
         result = math.exp(diffVect/(-2*sigma))
-        #TODO
         return result
 
     def gradient_descent(kernal_values, predicted_value, target_value, learning_rate):
@@ -122,8 +121,7 @@ class rb_neural_net:
         for i in range(len(kernal_values)):
             weight_change.append(error * kernal_values[i] * learning_rate)
 
-        for i in range
-            weights[0] = vector_add(weights[0], weight_change)
+        weights[0] = vector_add(weights[0], weight_change)
 
         return weight_change
 
@@ -131,11 +129,11 @@ class rb_neural_net:
         """
         Vector x + Vector y
         """
-        if (len[x] != len[y])
+        if (len[x] != len[y]):
             return
 
         z = []
-        for i in range(len(x))
+        for i in range(len(x)):
             z.append(x[i]+y[i])
 
         return z
@@ -147,7 +145,7 @@ class rb_neural_net:
         z = []
         if len(x) != len(y):
             return
-        for i in range(len(x))
+        for i in range(len(x)):
             z.append(x[i]-y[i])
 
         return z
