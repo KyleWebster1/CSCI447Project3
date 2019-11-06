@@ -7,6 +7,10 @@
 import KNN
 import FFN
 import random
+import math
+import pre_processing
+import dataset
+
 
 class rb_neural_net:
     """
@@ -23,7 +27,8 @@ class rb_neural_net:
         -------
 
     """
-    def __init__(self,training_set,test_set,outputs,gaussians):
+
+    def __init__(self, training_set, test_set, outputs, gaussians):
         """
         :training_set: The training set
         :test_set: The test set
@@ -36,33 +41,32 @@ class rb_neural_net:
         self.weights = [[]]
 
         for j in range(0, outputs):
-            weights.append(m)
-            for i in range(0,gaussians):
-                weights[j].append(random())
+            self.weights.append([])
+            for i in range(0, gaussians):
+                self.weights[j].append(random.random())
 
-
-        #find gaussians unsupervised
-        knn_instance = k_nearest_neighbor()
+        # find gaussians unsupervised
+        knn_instance = KNN.k_nearest_neighbor()
         self.gaussians = knn_instance.kMeans(training_set, gaussians)
 
         return
 
-    def run_sample(sample):
+    def run_sample(self, sample):
 
         kernal_values = []
         target = sample[-1]
         del sample[-1]
 
-        #calculate kernal values
-        for i in range(len(gaussians)):
-            kernal_values.append(gaussian(sample, i))
+        # calculate kernal values
+        for i in range(len(self.gaussians)):
+            kernal_values.append(self.gaussian(sample, i))
 
-        #calculate output values
+        # calculate output values
         output_values = []
-        for j in range(0,outputs):
+        for j in range(0, self.outputs):
             output_values.append(0)
             for i in range(len(kernal_values)):
-                output_values[j] += kernal_values[i] * weights[i][j]
+                output_values[j] += kernal_values[i] * self.weights[i][j]
 
         return kernal_values, output_values
 
@@ -70,18 +74,18 @@ class rb_neural_net:
         """
         :learning_rate: The learning rate for training this net
         """
-        #repeat until convergence
+        # repeat until convergence
         change = 1
         while change > 0.01:
-
-            sample = training_set[random.randrange(len(training_set))] #choose sample at random
+            sample = self.training_set[random.randrange(len(self.training_set))]  # choose sample at random
             target = sample[-1]
 
-            kernal_values, output_values = run_sample(sample)
+            kernal_values, output_values = self.run_sample(sample)
 
-            #apply gradient descent and track change in weights
+            # apply gradient descent and track change in weights
             ####I'm not super sure how he wants us to handle having multiple outputs for approximation so here I just use 1####
-            change = math.sqrt(vector_magnitude_squared(gradient_descent(kernel_values, output_values[0], target, learning_rate)))
+            change = math.sqrt(self.vector_magnitude_squared(
+                self.gradient_descent(self.kernel_values, output_values[0], target, learning_rate)))
 
         return
 
@@ -91,15 +95,14 @@ class rb_neural_net:
         """
         mean_sqr_err = 0
 
-        for x in range(len(test_set)):
-            k, o = run_sample(test_set[x])
-            err = test_set[x][-1] - o[0]
+        for x in range(len(self.test_set)):
+            k, o = self.run_sample(self.test_set[x])
+            err = self.test_set[x][-1] - o[0]
             mean_sqr_err += err * err
 
-        mean_sqr_err /= len(test_set)
+        mean_sqr_err /= len(self.test_set)
 
         return mean_sqr_err
-
 
     def gaussian(self, input, i, sigma):
         """
@@ -107,27 +110,25 @@ class rb_neural_net:
         :param j:
         :return:
         """
-        diffVect = vector_subtract(input, gaussians[i]);
-        diffMagSqr = vector_magnitude_squared(diffVect)
+        diffVect = self.vector_subtract(input, self.gaussians[i])
+        diffMagSqr = self.vector_magnitude_squared(diffVect)
         sigma = 1
 
-        result = math.exp(diffVect/(-2*sigma))
-        #TODO
+        result = math.exp(diffVect / (-2 * sigma))
         return result
 
-    def gradient_descent(kernal_values, predicted_value, target_value, learning_rate):
+    def gradient_descent(self, kernal_values, predicted_value, target_value, learning_rate):
 
-        error = -2*(target_value - predicted_value)
+        error = -2 * (target_value - predicted_value)
         weight_change = []
         for i in range(len(kernal_values)):
             weight_change.append(error * kernal_values[i] * learning_rate)
 
-        for i in range:
-            weights[0] = vector_add(weights[0], weight_change)
+        self.weights[0] = self.vector_add(self.weights[0], weight_change)
 
         return weight_change
 
-    def vector_add(x, y):
+    def vector_add(self, x, y):
         """
         Vector x + Vector y
         """
@@ -148,11 +149,11 @@ class rb_neural_net:
         if len(x) != len(y):
             return
         for i in range(len(x)):
-            z.append(x[i]-y[i])
+            z.append(x[i] - y[i])
 
         return z
 
-    def vector_magnitude_squared(x):
+    def vector_magnitude_squared(self, x):
         """
         ||Vector x||^2
         """
@@ -161,3 +162,9 @@ class rb_neural_net:
             mag += x[i] * x[i]
 
         return mag
+
+#To test the RBF
+tData = pre_processing.pre_processing("data/car.data")
+trainData = dataset.dataset(tData.getData())
+rb = rb_neural_net(trainData.getTrainingSet(), trainData.getTestSet(), 4, 2)
+rb.train(rb, 0.1)
