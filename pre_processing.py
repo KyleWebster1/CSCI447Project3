@@ -30,7 +30,11 @@ class pre_processing:
 
         # remove strings
         data = self.removeStrings(data)
-
+        classification = ["data/segmentation.data",
+                          "data/car.data",
+                          "data/abalone.data"]
+        if file_name in classification:
+            data = self.processClassification(data)
         self.data = data
 
     # Removes Headers from dataset
@@ -75,7 +79,7 @@ class pre_processing:
         return data
 
     # Converts data into a Value Difference Metric Probabilities for distance calculations
-    def processClassification(self, inData, fileName):
+    def processClassification(self, inData):
         # Dictionary for probability conversions
         table = {}
         # Stores all classes for numberical conversions later
