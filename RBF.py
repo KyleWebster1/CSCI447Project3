@@ -4,7 +4,7 @@
 # Kyle Webster
 # Greg Martin
 
-import KNN
+from KNN import k_nearest_neighbor
 import FFN
 import random
 import math
@@ -46,8 +46,13 @@ class rb_neural_net:
                 self.weights[j].append(random.random())
 
         # find gaussians unsupervised
-        knn_instance = KNN.k_nearest_neighbor()
-        self.gaussians = knn_instance.kMeans(training_set, gaussians)
+        knn_instance = k_nearest_neighbor()
+        unsupervised_set = []
+        for i in range(len(training_set)):
+            sample = self.training_set[i].copy()
+            del sample[-1]
+            unsupervised_set.append(sample)
+        self.gaussians = knn_instance.kMeans(unsupervised_set, gaussians)
 
         return
 
@@ -59,14 +64,14 @@ class rb_neural_net:
 
         # calculate kernal values
         for i in range(len(self.gaussians)):
-            kernal_values.append(self.gaussian(sample, i))
+            kernal_values.append(self.gaussian(sample, i, 1))
 
         # calculate output values
         output_values = []
         for j in range(0, self.outputs):
             output_values.append(0)
             for i in range(len(kernal_values)):
-                output_values[j] += kernal_values[i] * self.weights[i][j]
+                output_values[j] += kernal_values[i] * self.weights[j][i]
 
         return kernal_values, output_values
 
@@ -85,7 +90,7 @@ class rb_neural_net:
             # apply gradient descent and track change in weights
             ####I'm not super sure how he wants us to handle having multiple outputs for approximation so here I just use 1####
             change = math.sqrt(self.vector_magnitude_squared(
-                self.gradient_descent(self.kernel_values, output_values[0], target, learning_rate)))
+                self.gradient_descent(kernal_values, output_values[0], target, learning_rate)))
 
         return
 
@@ -114,7 +119,7 @@ class rb_neural_net:
         diffMagSqr = self.vector_magnitude_squared(diffVect)
         sigma = 1
 
-        result = math.exp(diffVect / (-2 * sigma))
+        result = math.exp(diffMagSqr / (-2 * sigma))
         return result
 
     def gradient_descent(self, kernal_values, predicted_value, target_value, learning_rate):
@@ -132,7 +137,8 @@ class rb_neural_net:
         """
         Vector x + Vector y
         """
-        if (len[x] != len[y]):
+        if (len(x) != len(y)):
+            print("Vectors not same len")
             return
 
         z = []
@@ -141,13 +147,21 @@ class rb_neural_net:
 
         return z
 
-    def vector_subtract(x, y):
+    def vector_subtract(self, x, y):
         """
         Vector x - Vector y
         """
         z = []
-        if len(x) != len(y):
+        if (len(x) != len(y)):
+            print("Vectors not same len")
+            print("x:")
+            for i in range(len(x)):
+                print(x[i])
+            print("y:")
+            for i in range(len(y)):
+                print(y[i])
             return
+        
         for i in range(len(x)):
             z.append(x[i] - y[i])
 
@@ -166,5 +180,7 @@ class rb_neural_net:
 #To test the RBF
 tData = pre_processing.pre_processing("data/car.data")
 trainData = dataset.dataset(tData.getData())
-rb = rb_neural_net(trainData.getTrainingSet(), trainData.getTestSet(), 4, 2)
-rb.train(rb, 0.1)
+rb = rb_neural_net(trainData.getTrainingSet(0), trainData.getTestSet(0), 4, 2)
+rb.train(0.1)
+acc = rb.test()
+print("Mean squared error: " + acc)
