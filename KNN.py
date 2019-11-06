@@ -5,8 +5,6 @@
 # Greg Martin
 
 import math
-import FFN
-import RBF
 import random
 import time
 from operator import add
@@ -200,6 +198,7 @@ class pre_processing:
 
 # class containing methods implementing the K-NN algorithms
 class k_nearest_neighbor:
+
     def __init__(self):
         print("init knn")
 
@@ -211,7 +210,7 @@ class k_nearest_neighbor:
 
         # calculate distances for each training set
         for x in range(len(trainingSets)):
-            dist = minkowskiDistance(t, trainingSets[x], 'inf')
+            dist = minkowskiDistance(t, trainingSets[x], 2)
             distances.append((trainingSets[x], dist))
 
         # find k nearest neighbors
@@ -340,7 +339,7 @@ class k_nearest_neighbor:
                 minDistance = None
                 min = None
                 for m in u:
-                    dist = minkowskiDistance(x, m, 'inf')
+                    dist = minkowskiDistance(x, m, 2)
                     if minDistance == None:
                         minDistance = dist
                         min = m
@@ -374,7 +373,7 @@ class k_nearest_neighbor:
             comb = 0
             countC = 0
             for i in range(len(u)):
-                comb += minkowskiDistance(u[i], oldU[i], 'inf')
+                comb += minkowskiDistance(u[i], oldU[i], 2)
                 countC += 1
             change = comb / float(countC)
         return u
@@ -391,7 +390,7 @@ class k_nearest_neighbor:
                 minDistance = None
                 min = None
                 for m in u:
-                    dist = minkowskiDistance(x, m, 'inf')
+                    dist = minkowskiDistance(x, m, 2)
                     if minDistance == None:
                         minDistance = dist
                         min = m
@@ -423,9 +422,9 @@ class k_nearest_neighbor:
                 for i in temp:
                     if closestPoint == None:
                         closestPoint = i
-                        closestValue = minkowskiDistance(i, mean, 'inf')
+                        closestValue = minkowskiDistance(i, mean, 2)
                     else:
-                        distance = minkowskiDistance(i, mean, 'inf')
+                        distance = minkowskiDistance(i, mean, 2)
                         if distance < closestValue:
                             closestPoint = i
                             closestValue = distance
@@ -437,7 +436,7 @@ class k_nearest_neighbor:
             comb = 0
             countC = 0
             for i in range(len(u)):
-                comb += minkowskiDistance(u[i], oldU[i], 'inf')
+                comb += minkowskiDistance(u[i], oldU[i], 2)
                 countC += 1
             change = comb / float(countC)
         return u

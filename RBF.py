@@ -5,7 +5,6 @@
 # Greg Martin
 
 import KNN
-import FFN
 import random
 import math
 import pre_processing
@@ -46,8 +45,9 @@ class rb_neural_net:
                 self.weights[j].append(random.random())
 
         # find gaussians unsupervised
-        knn_instance = KNN.k_nearest_neighbor()
-        self.gaussians = knn_instance.kMeans(training_set, gaussians)
+        knn_instance = KNN.k_nearest_neighbor
+        for i in training_set:
+            self.gaussians = knn_instance.kMeans(KNN, i, gaussians)
 
         return
 
@@ -59,7 +59,7 @@ class rb_neural_net:
 
         # calculate kernal values
         for i in range(len(self.gaussians)):
-            kernal_values.append(self.gaussian(sample, i))
+            kernal_values.append(self.gaussian(sample, i, 1))
 
         # calculate output values
         output_values = []
@@ -150,7 +150,6 @@ class rb_neural_net:
             return
         for i in range(len(x)):
             z.append(x[i] - y[i])
-
         return z
 
     def vector_magnitude_squared(self, x):
@@ -167,4 +166,4 @@ class rb_neural_net:
 tData = pre_processing.pre_processing("data/car.data")
 trainData = dataset.dataset(tData.getData())
 rb = rb_neural_net(trainData.getTrainingSet(), trainData.getTestSet(), 4, 2)
-rb.train(rb, 0.1)
+rb.train(0.1)
