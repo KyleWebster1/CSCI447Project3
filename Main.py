@@ -4,10 +4,9 @@
 # Greg Martin
 
 import pre_processing
-import dataset
-import RBF
+from dataset import dataset
+from RBF import rb_neural_net
 import FFN
-import KNN
 
 files = ["data/car.data",
              "data/forestfires.csv",
@@ -19,15 +18,12 @@ files = ["data/car.data",
 
              "data/winequality-red.csv",
              "data/winequality-white.csv"]
-for file in files:
-    print('=========================================\n' + file + '\n=========================================')
-    tData = pre_processing.pre_processing(file)
-    trainData = dataset.dataset(tData.getData())
-    knn = KNN.k_nearest_neighbor()
-    trainSet = trainData.getTestSet()
-    testSet = trainData.getTestSet()
-    for i in range(10):
-        rb = RBF.rb_neural_net(trainSet[i], testSet[i], 4, len(knn.condenseSets(trainSet[i], testSet[i], 5)))
-        rb.train(0.01)
-        acc = rb.test()
-        print(i, "Mean squared error: ", acc)
+#for file in files:
+#print('=========================================\n' + file + '\n=========================================')
+tData = pre_processing.pre_processing("data/abalone.data")
+trainData = dataset(tData.getData())
+for i in range(10):
+    rb = rb_neural_net(trainData.getTrainingSet(i), trainData.getTestSet(i), 4, 4)
+    rb.train(0.01)
+    mse = rb.test()
+    print("Mean squared error: " + str(mse))

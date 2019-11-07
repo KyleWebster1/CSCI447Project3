@@ -38,11 +38,11 @@ class rb_neural_net:
         self.training_set = training_set
         self.test_set = test_set
         self.outputs = outputs
-        self.weights = [[]]
+        self.weights = []
 
-        for j in range(0, outputs):
+        for j in range(outputs):
             self.weights.append([])
-            for i in range(0, gaussians):
+            for i in range(gaussians):
                 self.weights[j].append(random.random())
 
         # find gaussians unsupervised
@@ -53,14 +53,13 @@ class rb_neural_net:
             del sample[-1]
             unsupervised_set.append(sample)
         self.gaussians = knn_instance.kMeans(unsupervised_set, gaussians)
+        print("g: " + str(len(self.gaussians)))
 
         return
 
-    def run_sample(self, sample):
+    def run_sample(self, sample, target):
 
         kernal_values = []
-        target = sample[-1]
-        del sample[-1]
 
         # calculate kernal values
         for i in range(len(self.gaussians)):
@@ -69,7 +68,7 @@ class rb_neural_net:
         # calculate output values
         output_values = []
         for j in range(self.outputs):
-            output_values.append(0)
+            output_values.append(float(0))
             for i in range(len(kernal_values)):
                 output_values[j] = output_values[j] + (kernal_values[i] * self.weights[j][i])
 
@@ -79,13 +78,15 @@ class rb_neural_net:
         """
         :learning_rate: The learning rate for training this net
         """
+        print("training")
         # repeat until convergence
         change = 1
         while change > 0.01:
-            sample = self.training_set[random.randrange(len(self.training_set))]  # choose sample at random
+            sample = self.training_set[random.randrange(len(self.training_set))].copy()  # choose sample at random
             target = sample[-1]
+            del sample[-1]
 
-            kernal_values, output_values = self.run_sample(sample)
+            kernal_values, output_values = self.run_sample(sample, target)
 
             # apply gradient descent and track change in weights
             ####I'm not super sure how he wants us to handle having multiple outputs for approximation so here I just use 1####
@@ -105,8 +106,12 @@ class rb_neural_net:
             mean_sqr_err = 0
 
             for x in range(len(self.test_set)):
-                k, o = self.run_sample(self.test_set[x])
-                err = self.test_set[x][-1] - o[0]
+                sample = self.test_set[x].copy()
+                target = sample[-1]
+                del sample[-1]
+
+                k, o = self.run_sample(sample, target)
+                err = target - o[0]
                 mean_sqr_err += err * err
 
             mean_sqr_err /= len(self.test_set)
@@ -116,14 +121,20 @@ class rb_neural_net:
             acc = 0
 
             for x in range(len(self.test_set)):
-                k, o = self.run_sample(self.test_set[x])
+                sample = self.test_set[x].copy()
+                target = sample[-1]
+                del sample[-1]
+
+                k, o = self.run_sample(sample, target)
+                print(*sample)
+                #print(*o)
                 highest_class_value = 0
                 for i in range(len(o)):
                     if o[i] > highest_class_value:
                         highest_class = i
                         highest_class_value = o[i]
-
-                if self.test_set[x][-1] == highest_class:
+                #print("Target: " + str(target) + ", Prediction: " + str(highest_class))
+                if target == highest_class:
                     acc += 1
 
             acc /= len(self.test_set)
@@ -138,8 +149,6 @@ class rb_neural_net:
         """
         diffVect = self.vector_subtract(input, self.gaussians[i])
         diffMagSqr = self.vector_magnitude_squared(diffVect)
-        sigma = 1
-
         result = math.exp(diffMagSqr / (-2 * sigma))
         return result
 
@@ -149,7 +158,6 @@ class rb_neural_net:
         weight_change = []
         for i in range(len(kernal_values)):
             weight_change.append(error * kernal_values[i] * learning_rate)
-
         self.weights[0] = self.vector_add(self.weights[0], weight_change)
 
         return math.sqrt(self.vector_magnitude_squared(weight_change))
@@ -190,7 +198,14 @@ class rb_neural_net:
         Vector x + Vector y
         """
         if (len(x) != len(y)):
-            print("Vectors not same len")
+            print("add Vectors not same len")
+            print("x:")
+            for i in range(len(x)):
+                print(x[i])
+            print("y:")
+            for i in range(len(y)):
+                print(y[i])
+            return
             return
 
         z = []
@@ -205,7 +220,7 @@ class rb_neural_net:
         """
         z = []
         if (len(x) != len(y)):
-            print("Vectors not same len")
+            print("sub Vectors not same len")
             print("x:")
             for i in range(len(x)):
                 print(x[i])
@@ -228,17 +243,3 @@ class rb_neural_net:
             mag += x[i] * x[i]
 
         return mag
-
-#To test the RBF
-tData = pre_processing.pre_processing("data/car.data")
-tData2 = pre_processing.pre_processing("data/segmentation.data")
-trainData = dataset.dataset(tData.getData())
-trainData2 = dataset.dataset(tData2.getData())
-rb = rb_neural_net(trainData.getTrainingSet(0), trainData.getTestSet(0), 1, 2)
-rb2 = rb_neural_net(trainData2.getTrainingSet(0), trainData2.getTestSet(0), 4, 2)
-rb.train(0.1)
-rb2.train(0.1)
-mse = rb.test()
-acc = rb2.test()
-print("Mean squared error: " + str(mse))
-print("Accuracy: " + str(acc))

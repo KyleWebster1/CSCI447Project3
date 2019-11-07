@@ -11,11 +11,11 @@ class dataset:
     def getTotalSet(self):
         return self.total_set
 
-    def getTrainingSet(self):
-        return self.training_set
+    def getTrainingSet(self,k):
+        return self.training_set[k]
 
-    def getTestSet(self):
-        return self.test_set
+    def getTestSet(self, k):
+        return self.test_set[k]
 
     def getNumClasses(self):
         classes = []

@@ -33,8 +33,7 @@ class pre_processing:
         classification = ["data/segmentation.data",
                           "data/car.data",
                           "data/abalone.data"]
-        if file_name in classification:
-            data = self.processClassification(data)
+
         self.data = data
 
     # Removes Headers from dataset
