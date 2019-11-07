@@ -26,8 +26,7 @@ for file in files:
     knn = KNN.k_nearest_neighbor()
     trainSet = trainData.getTestSet()
     testSet = trainData.getTestSet()
-    for i in range(10):
-        rb = RBF.rb_neural_net(trainSet[i], testSet[i], 4, len(knn.condenseSets(trainSet[i], testSet[i], 5)))
-        rb.train(0.01)
-        acc = rb.test()
-        print(i, "Mean squared error: ", acc)
+    rb = RBF.rb_neural_net(trainSet, testSet, 4, len(knn.condenseSets(trainSet, testSet, 5)))
+    rb.train(0.01)
+    acc = rb.test()
+    print("Mean squared error: ", acc)
