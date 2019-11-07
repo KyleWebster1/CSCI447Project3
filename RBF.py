@@ -68,10 +68,10 @@ class rb_neural_net:
 
         # calculate output values
         output_values = []
-        for j in range(0, self.outputs):
+        for j in range(self.outputs):
             output_values.append(0)
             for i in range(len(kernal_values)):
-                output_values[j] += kernal_values[i] * self.weights[j][i]
+                output_values[j] = output_values[j] + (kernal_values[i] * self.weights[j][i])
 
         return kernal_values, output_values
 
@@ -89,8 +89,11 @@ class rb_neural_net:
 
             # apply gradient descent and track change in weights
             ####I'm not super sure how he wants us to handle having multiple outputs for approximation so here I just use 1####
-            change = math.sqrt(self.vector_magnitude_squared(
-                self.gradient_descent(kernal_values, output_values[0], target, learning_rate)))
+
+            if self.outputs == 1:
+                change = self.gradient_descent_regression(kernal_values, output_values[0], target, learning_rate)
+            else:
+                change = self.gradient_descent_classification(kernal_values, output_values, target, learning_rate)
 
         return
 
@@ -98,16 +101,34 @@ class rb_neural_net:
         """
         :return: average mean squared error of test set
         """
-        mean_sqr_err = 0
+        if (self.outputs == 1):
+            mean_sqr_err = 0
 
-        for x in range(len(self.test_set)):
-            k, o = self.run_sample(self.test_set[x])
-            err = self.test_set[x][-1] - o[0]
-            mean_sqr_err += err * err
+            for x in range(len(self.test_set)):
+                k, o = self.run_sample(self.test_set[x])
+                err = self.test_set[x][-1] - o[0]
+                mean_sqr_err += err * err
 
-        mean_sqr_err /= len(self.test_set)
+            mean_sqr_err /= len(self.test_set)
 
-        return mean_sqr_err
+            return mean_sqr_err
+        else:
+            acc = 0
+
+            for x in range(len(self.test_set)):
+                k, o = self.run_sample(self.test_set[x])
+                highest_class_value = 0
+                for i in range(len(o)):
+                    if o[i] > highest_class_value:
+                        highest_class = i
+                        highest_class_value = o[i]
+
+                if self.test_set[x][-1] == highest_class:
+                    acc += 1
+
+            acc /= len(self.test_set)
+
+            return acc
 
     def gaussian(self, input, i, sigma):
         """
@@ -122,7 +143,7 @@ class rb_neural_net:
         result = math.exp(diffMagSqr / (-2 * sigma))
         return result
 
-    def gradient_descent(self, kernal_values, predicted_value, target_value, learning_rate):
+    def gradient_descent_regression(self, kernal_values, predicted_value, target_value, learning_rate):
 
         error = -2 * (target_value - predicted_value)
         weight_change = []
@@ -131,8 +152,39 @@ class rb_neural_net:
 
         self.weights[0] = self.vector_add(self.weights[0], weight_change)
 
-        return weight_change
+        return math.sqrt(self.vector_magnitude_squared(weight_change))
 
+    def gradient_descent_classification(self, kernal_values, output_values, target_class, learning_rate):
+        
+        weight_change = []
+        average_change = 0
+
+        for j in range(self.outputs):
+            
+            weight_change.append([])
+                
+            for i in range(len(kernal_values)):
+                kernal_out = kernal_values[i] * self.weights[j][i]
+                change = (-1*(1-kernal_out)*kernal_out*(1-kernal_out) * kernal_values[i])
+                weight_change[j].append(-1 * change * kernal_values[i] * learning_rate)
+                
+            self.weights[j] = self.vector_add(self.weights[j], weight_change[j]);
+            average_change += math.sqrt(self.vector_magnitude_squared(weight_change[j]))
+                                            
+        average_change /= self.outputs
+            
+        return average_change
+        
+    def vector_scal(self, x, f):
+        """
+        f * Vector x
+        """
+        out = []
+        for i in range(len(x)):
+            out.append(x[i] * f)
+
+        return out
+        
     def vector_add(self, x, y):
         """
         Vector x + Vector y
@@ -179,8 +231,14 @@ class rb_neural_net:
 
 #To test the RBF
 tData = pre_processing.pre_processing("data/car.data")
+tData2 = pre_processing.pre_processing("data/segmentation.data")
 trainData = dataset.dataset(tData.getData())
-rb = rb_neural_net(trainData.getTrainingSet(0), trainData.getTestSet(0), 4, 2)
+trainData2 = dataset.dataset(tData2.getData())
+rb = rb_neural_net(trainData.getTrainingSet(0), trainData.getTestSet(0), 1, 2)
+rb2 = rb_neural_net(trainData2.getTrainingSet(0), trainData2.getTestSet(0), 4, 2)
 rb.train(0.1)
-acc = rb.test()
-print("Mean squared error: " + acc)
+rb2.train(0.1)
+mse = rb.test()
+acc = rb2.test()
+print("Mean squared error: " + str(mse))
+print("Accuracy: " + str(acc))
