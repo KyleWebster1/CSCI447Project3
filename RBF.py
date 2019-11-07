@@ -176,11 +176,3 @@ class rb_neural_net:
             mag += x[i] * x[i]
 
         return mag
-
-#To test the RBF
-tData = pre_processing.pre_processing("data/car.data")
-trainData = dataset.dataset(tData.getData())
-rb = rb_neural_net(trainData.getTrainingSet(0), trainData.getTestSet(0), 4, 2)
-rb.train(0.1)
-acc = rb.test()
-print("Mean squared error: " + acc)
