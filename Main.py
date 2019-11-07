@@ -18,6 +18,7 @@ files = ["data/car.data",
 
              "data/winequality-red.csv",
              "data/winequality-white.csv"]
+<<<<<<< HEAD
 #for file in files:
 #print('=========================================\n' + file + '\n=========================================')
 tData = pre_processing.pre_processing("data/abalone.data")
@@ -27,3 +28,16 @@ for i in range(10):
     rb.train(0.01)
     mse = rb.test()
     print("Mean squared error: " + str(mse))
+=======
+for file in files:
+    print('=========================================\n' + file + '\n=========================================')
+    tData = pre_processing.pre_processing(file)
+    trainData = dataset.dataset(tData.getData())
+    knn = KNN.k_nearest_neighbor()
+    trainSet = trainData.getTestSet()
+    testSet = trainData.getTestSet()
+    rb = RBF.rb_neural_net(trainSet, testSet, 4, len(knn.condenseSets(trainSet, testSet, 5)))
+    rb.train(0.01)
+    acc = rb.test()
+    print("Mean squared error: ", acc)
+>>>>>>> 1d784fc8386e6b311799a059e58721946cac7e3f

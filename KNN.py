@@ -89,143 +89,150 @@ class k_nearest_neighbor:
     # edit training sets using test sets
     def condenseSets(self, trainingSets, testSets, k):
 
-        print("Condensing Sets...")
         condensedSets = []
 
-        trainingSet = trainingSets
-        condensedSetBefore = []
-        condensedSetAfter = []
-        while (True):
-            for i in range(len(trainingSet)):
-                x = trainingSet[i]
-                condensedSetBefore = condensedSetAfter
-                if (condensedSetBefore == []):
-                    condensedSetAfter.append(x)
+        for n in range(len(trainingSets)):
+
+            trainingSet = trainingSets[n]
+            condensedSetBefore = []
+            condensedSetAfter = []
+            while (True):
+                for i in range(len(trainingSet)):
+                    x = trainingSet[i]
                     condensedSetBefore = condensedSetAfter
-                else:
-                    if (len(condensedSetAfter) < k):
-                        neighbors = self.knn(condensedSetAfter, x, 1)
-                    else:
-                        neighbors = self.knn(condensedSetAfter, x, k)
-                    if (neighbors[0][len(neighbors[0]) - 1] != x[len(x) - 1]):
+                    if (condensedSetBefore == []):
                         condensedSetAfter.append(x)
                         condensedSetBefore = condensedSetAfter
-            if (condensedSetBefore == condensedSetAfter):
-                break
+                    else:
+                        if (len(condensedSetAfter) < k):
+                            neighbors = self.knn(condensedSetAfter, x, 1)
+                        else:
+                            neighbors = self.knn(condensedSetAfter, x, k)
+                        if (neighbors[0][len(neighbors[0]) - 1] != x[len(x) - 1]):
+                            condensedSetAfter.append(x)
+                            condensedSetBefore = condensedSetAfter
+                if (condensedSetBefore == condensedSetAfter):
+                    break
 
-        condensedSets.append(condensedSetAfter)
+            condensedSets.append(condensedSetAfter)
         return condensedSets
 
     # Reducing dataset to centroids centered around the mean
     def kMeans(self, data, k):
-        u = []
-        change = 1
-        for i in range(k):
-            u.append(random.choice(data))
-        while change > .01:
-            centroids = {}
-            for x in data:
-                minDistance = None
-                min = None
-                for m in u:
-                    dist = minkowskiDistance(x, m, 2)
-                    if minDistance == None:
-                        minDistance = dist
-                        min = m
-                    elif dist < minDistance:
-                        minDistance = dist
-                        min = m
-                a = u.index(min)
-                try:
-                    centroids[a].append(x)
-                except:
-                    centroids.setdefault(a, [])
-                    centroids[a].append(x)
-            for i in u:
-                a = u.index(i)
-                try:
-                    temp = centroids[a]
-                except:
-                    del u[u.index(i)]
-                total = temp[0]
-                count = 1
-                for j in temp[1:]:
-                    total = list(map(add, total, j))
-                    count += 1
-                # print(total)
-                mean = [x / float(count) for x in total]
-                oldU = u
-                try:
-                    u[u.index(i)] = mean
-                except:
-                    mean = mean
-            comb = 0
-            countC = 0
-            for i in range(len(u)):
-                comb += minkowskiDistance(u[i], oldU[i], 2)
-                countC += 1
-            change = comb / float(countC)
-        return u
+        meansAfter = []
+        for d in data:
+            u = []
+            change = 1
+            for i in range(k):
+                u.append(random.choice(d))
+            while change > .01:
+                centroids = {}
+                for x in d:
+                    minDistance = None
+                    min = None
+                    for m in u:
+                        dist = minkowskiDistance(x, m, 2)
+                        if minDistance == None:
+                            minDistance = dist
+                            min = m
+                        elif dist < minDistance:
+                            minDistance = dist
+                            min = m
+                    a = u.index(min)
+                    try:
+                        centroids[a].append(x)
+                    except:
+                        centroids.setdefault(a, [])
+                        centroids[a].append(x)
+                for i in u:
+                    a = u.index(i)
+                    try:
+                        temp = centroids[a]
+                    except:
+                        del u[u.index(i)]
+                    total = temp[0]
+                    count = 1
+                    for j in temp[1:]:
+                        total = list(map(add, total, j))
+                        count += 1
+                    # print(total)
+                    mean = [x / float(count) for x in total]
+                    oldU = u
+                    try:
+                        u[u.index(i)] = mean
+                    except:
+                        mean = mean
+                comb = 0
+                countC = 0
+                for i in range(len(u)):
+                    comb += minkowskiDistance(u[i], oldU[i], 2)
+                    countC += 1
+                change = comb / float(countC)
+            meansAfter.append(u)
+        return meansAfter
 
     # Function to determine the Medoids for K-Nearest Clustering
     def kMedoids(self, data, k):
-        u = []
-        change = 1
-        for i in range(k):
-            u.append(random.choice(data))
-        while change > .1:
-            centroids = {}
-            for x in data:
-                minDistance = None
-                min = None
-                for m in u:
-                    dist = minkowskiDistance(x, m, 2)
-                    if minDistance == None:
-                        minDistance = dist
-                        min = m
-                    elif dist < minDistance:
-                        minDistance = dist
-                        min = m
-                a = u.index(min)
-                try:
-                    centroids[a].append(x)
-                except:
-                    centroids.setdefault(a, [])
-                    centroids[a].append(x)
-            for i in u:
-                a = u.index(i)
-                try:
-                    temp = centroids[a]
-                except:
-                    del u[u.index(i)]
-                total = temp[0]
-                count = 1
-                for j in temp[1:]:
-                    total = list(map(add, total, j))
-                    count += 1
-                # print(total)
-                mean = [x / float(count) for x in total]
-                oldU = u
-                closestPoint = None
-                closestValue = 0
-                for i in temp:
-                    if closestPoint == None:
-                        closestPoint = i
-                        closestValue = minkowskiDistance(i, mean, 2)
-                    else:
-                        distance = minkowskiDistance(i, mean, 2)
-                        if distance < closestValue:
+        medoidsAfter = []
+        for d in data:
+            u = []
+            change = 1
+            for i in range(k):
+                u.append(random.choice(d))
+            while change > .1:
+                centroids = {}
+                for x in d:
+                    minDistance = None
+                    min = None
+                    for m in u:
+                        dist = minkowskiDistance(x, m, 2)
+                        if minDistance == None:
+                            minDistance = dist
+                            min = m
+                        elif dist < minDistance:
+                            minDistance = dist
+                            min = m
+                    a = u.index(min)
+                    try:
+                        centroids[a].append(x)
+                    except:
+                        centroids.setdefault(a, [])
+                        centroids[a].append(x)
+                for i in u:
+                    a = u.index(i)
+                    try:
+                        temp = centroids[a]
+                    except:
+                        del u[u.index(i)]
+                    total = temp[0]
+                    count = 1
+                    for j in temp[1:]:
+                        total = list(map(add, total, j))
+                        count += 1
+                    # print(total)
+                    mean = [x / float(count) for x in total]
+                    oldU = u
+                    closestPoint = None
+                    closestValue = 0
+                    for i in temp:
+                        if closestPoint == None:
                             closestPoint = i
-                            closestValue = distance
-                # Error detection
-                try:
-                    u[u.index(i)] = closestPoint
-                except:
-                    mean = mean
-            comb = 0
-            countC = 0
-            for i in range(len(u)):
-                comb += minkowskiDistance(u[i], oldU[i], 2)
-                countC += 1
-            change = comb / float(countC)
-        return u
+                            closestValue = minkowskiDistance(i, mean, 2)
+                        else:
+                            distance = minkowskiDistance(i, mean, 2)
+                            if distance < closestValue:
+                                closestPoint = i
+                                closestValue = distance
+                    # Error detection
+                    try:
+                        u[u.index(i)] = closestPoint
+                    except:
+                        mean = mean
+                comb = 0
+                countC = 0
+                for i in range(len(u)):
+                    comb += minkowskiDistance(u[i], oldU[i], 2)
+                    countC += 1
+                change = comb / float(countC)
+            medoidsAfter.append(u)
+        return medoidsAfter
