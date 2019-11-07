@@ -155,26 +155,26 @@ class rb_neural_net:
         return math.sqrt(self.vector_magnitude_squared(weight_change))
 
     def gradient_descent_classification(self, kernal_values, output_values, target_class, learning_rate):
-        
+
         weight_change = []
         average_change = 0
 
         for j in range(self.outputs):
-            
+
             weight_change.append([])
-                
+
             for i in range(len(kernal_values)):
                 kernal_out = kernal_values[i] * self.weights[j][i]
                 change = (-1*(1-kernal_out)*kernal_out*(1-kernal_out) * kernal_values[i])
                 weight_change[j].append(-1 * change * kernal_values[i] * learning_rate)
-                
+
             self.weights[j] = self.vector_add(self.weights[j], weight_change[j]);
             average_change += math.sqrt(self.vector_magnitude_squared(weight_change[j]))
-                                            
+
         average_change /= self.outputs
-            
+
         return average_change
-        
+
     def vector_scal(self, x, f):
         """
         f * Vector x
@@ -184,7 +184,7 @@ class rb_neural_net:
             out.append(x[i] * f)
 
         return out
-        
+
     def vector_add(self, x, y):
         """
         Vector x + Vector y
@@ -213,7 +213,7 @@ class rb_neural_net:
             for i in range(len(y)):
                 print(y[i])
             return
-        
+
         for i in range(len(x)):
             z.append(x[i] - y[i])
 

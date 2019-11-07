@@ -9,7 +9,8 @@ import math
 class Neuron:
     #neuron is created with a weight
     #not sure how to represent activation function in this class
-    def __init__(self, w, b):
+    def __init__(self,inputs, w, b):
+        self.inputs = w
         self.w = w
         self.bias = b
     def dot(self, x= []):
