@@ -33,24 +33,8 @@ class FeedForwardNeuralNetwork:
         return layer.delta * inp.T * momentum
  
     def backprop(self, data, correct_answer, momentum, output):
-        for i in reversed(range(len(self.total_layers))):
-            layer = self.total_layers[i]
-            if layer == self.total_layers[-1]:
-                layer.error = self.find_error(correct_answer, output)
-                layer.delta = self.calc_delta(layer.error,layer.sigmoid_deriv(output))
-            else:
-                next_layer = self.total_layers[i + 1]
-                layer.error = np.dot(next_layer.weights, next_layer.delta)
-                layer.delta = self.calc_delta(layer.error,layer.sigmoid_deriv(layer.already_activated))
- 
-        for i in range(len(self.total_layers)):
-            layer = self.total_layers[i]
-            if(i==0):
-                inp = np.atleast_2d(data)
-            else:
-                inp = np.atleast_2d(self.total_layers[i-1].already_activated)
-            layer.weights += self.change_weights(layer, layer.delta, inp, momentum)
- 
+        pass
+        #TODO 
     def train(self, net, actual, momentum, max_iterations):
         mse = 1
         count = 0
