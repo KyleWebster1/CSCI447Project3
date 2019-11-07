@@ -137,11 +137,11 @@ class rb_neural_net:
 
         z = []
         for i in range(len(x)):
-            z.append(x[i] + y[i])
+            z.append(x[i]+y[i])
 
         return z
 
-    def vector_subtract(self, x, y):
+    def vector_subtract(x, y):
         """
         Vector x - Vector y
         """
