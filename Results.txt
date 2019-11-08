@@ -398,3 +398,12 @@ data/winequality-red.csv
 Deleted Header Row
 Mean Squared Error for 0  Layer:  20.24677025462963
 Mean Squared Error for 1  Layer:  111.04440914351851
+=========================================
+data/winequality-white.csv
+=========================================
+Deleted Header Row
+11
+Created the layers
+Mean Squared Error for 0  Layer:  22.303414813134747
+Created the layers
+Mean Squared Error for 1  Layer:  113.03958174441169
