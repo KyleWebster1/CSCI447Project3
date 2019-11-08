@@ -148,7 +148,12 @@ class rb_neural_net:
         """
         diffVect = VectorUtilities.vector_subtract(input, self.gaussians[i])
         diffMagSqr = VectorUtilities.vector_magnitude_squared(diffVect)
-        result = math.exp(-diffMagSqr / (2 * math.pow(self.sigma(i), 2)))
+        sig = self.sigma(i)
+        if (sig != 0):
+            result = math.exp(-diffMagSqr / (2 * math.pow(, 2)))
+        else:
+            result = 0
+            
         return result
 
     def sigma(self, i):

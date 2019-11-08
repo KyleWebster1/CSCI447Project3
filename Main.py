@@ -20,7 +20,7 @@ for n in range(len(classification)):
     trainData = dataset(tData.getData())
     acc = 0
     if n == 0:
-        o = 6
+        o = 10
         g = 8
     elif n == 1:
         o = 10
