@@ -14,10 +14,10 @@ class FeedForwardNeuralNetwork:
 
     def MSE(self, net, actual):
         return np.mean(np.square(actual - ffn.feed_forward(net)))
-    
+
     def add(self, layer):
         self.total_layers.append(layer)
- 
+
     def feed_forward(self, node):
         for layer in self.total_layers:
             node = layer.activate_function(node)
@@ -25,16 +25,16 @@ class FeedForwardNeuralNetwork:
 
     def find_error(self, correct_answer, output):
         return correct_answer - output
-    
+
     def calc_delta(self, error, deriv):
         return error*deriv
 
     def change_weights(self, layer, delta, inp, momentum):
         return layer.delta * inp.T * momentum
- 
+
     def backprop(self, data, correct_answer, momentum, output):
         pass
-        #TODO 
+        #TODO
     def train(self, net, actual, momentum, max_iterations):
         mse = 1
         count = 0
@@ -53,22 +53,22 @@ class Layer:
         self.already_activated = None
         self.error = None
         self.delta = None
- 
+
     def activate_function(self, x):
         r = np.dot(x, self.weights) + self.bias
         self.already_activated = self.sigmoid(r)
         return self.already_activated
- 
+
     def sigmoid(self, r):
         return 1 / (1 + np.exp(-r))
- 
+
     def sigmoid_deriv(self, r):
         return r * (1 - r)
-    
+
 #TODO
-tData = pre_processing.pre_processing("data/car.data")
+"""tData = pre_processing.pre_processing("data/car.data")
 trainData = dataset.dataset(tData.getData())
-x=np.array(trainData.getTrainingSet())
+x=np.array(trainData.getTrainingSet(0))
 
 #Simple test case. AND gate
 x = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
@@ -80,4 +80,4 @@ ffn.add(Layer(4, 4))
 ffn.add(Layer(4, 4))
 ffn.add(Layer(4, 3))
 
-ffn.train(x,y,0.2,500)
+ffn.train(x,y,0.2,500)"""

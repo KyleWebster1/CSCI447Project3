@@ -11,11 +11,33 @@ def vector_add(x, y):
         for i in range(len(y)):
             print(y[i])
         return
-        return
 
     z = []
     for i in range(len(x)):
         z.append(x[i]+y[i])
+
+    return z
+def vector_dot (x,y):
+    z = []
+    if (len(x) != len(y)):
+        print("sub Vectors not same len")
+        print("x:")
+        for i in range(len(x)):
+            print(x[i])
+        print("y:")
+        for i in range(len(y)):
+            print(y[i])
+        return z
+
+    for i in range(len(x)):
+        z.append(x[i] * y[i])
+
+    return z
+
+def vector_scale(x,a):
+    z = []
+    for i in range(len(x)):
+        z.append(x[i] * a)
 
     return z
 

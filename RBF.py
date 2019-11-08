@@ -5,7 +5,6 @@
 # Greg Martin
 
 from KNN import k_nearest_neighbor
-import FFN
 import random
 import math
 import pre_processing
@@ -44,7 +43,7 @@ class rb_neural_net:
         for j in range(outputs):
             self.weights.append([])
             for i in range(gaussians):
-                self.weights[j].append(random.uniform(0,1))
+                self.weights[j].append(random.uniform(-.01, .01))
 
         # find gaussians unsupervised
         knn_instance = k_nearest_neighbor()
@@ -56,6 +55,7 @@ class rb_neural_net:
 
         self.gaussians, self.clusters = knn_instance.kMeans(unsupervised_set, gaussians)
         print("g: " + str(len(self.gaussians)))
+        print("o: " + str(outputs))
 
         return
 
@@ -84,17 +84,15 @@ class rb_neural_net:
         # repeat until convergence
         change = [1,1,1,1]
         running_change = 4
-        while running_change > 0.0004:
-            print("running change: " + str(running_change))
+        while running_change > 0:
 
             sample = random.choice(self.training_set).copy()  # choose sample at random
             target = sample[-1]
             del sample[-1]
 
             kernal_values, output_values = self.run_sample(sample, target)
-            # apply gradient descent and track change in weights
-            ####I'm not super sure how he wants us to handle having multiple outputs for approximation so here I just use 1####
 
+            # apply gradient descent and track change in weights
             if self.outputs == 1:
                 change.append(self.gradient_descent_regression(kernal_values, output_values[0], target, learning_rate))
             else:
@@ -102,14 +100,13 @@ class rb_neural_net:
 
             del change[0]
             running_change = change[-1] + change[-2] + change[-3] + change[-4]
-            #print("Change: " + str(change))
         return
 
     def test(self):
         """
         :return: average mean squared error of test set
         """
-        print("test")
+        print("testing")
         if (self.outputs == 1):
             mean_sqr_err = 0
 
@@ -120,7 +117,6 @@ class rb_neural_net:
 
                 k, o = self.run_sample(sample, target)
                 err = target - o[0]
-                print("Target: " + str(target) + ", Prediction: " + str(o[0]))
                 mean_sqr_err += err * err
 
             mean_sqr_err /= len(self.test_set)
@@ -137,7 +133,6 @@ class rb_neural_net:
                 k, o = self.run_sample(sample, target)
                 prediction = self.predict_class(o)
 
-                print("Target: " + str(target) + ", Prediction: " + str(prediction))
                 if int(target) == prediction:
                     acc += 1
 
@@ -169,7 +164,6 @@ class rb_neural_net:
 
         error = (target_value - predicted_value)
         weight_change = []
-        #print("Target: " + str(target_value) + ", Prediction: " + str(predicted_value))
 
         for i in range(len(kernal_values)):
             weight_change.append(error * kernal_values[i] * learning_rate)
@@ -179,33 +173,29 @@ class rb_neural_net:
 
     def gradient_descent_classification(self, kernal_values, output_values, target_class, learning_rate):
 
-        weight_change = []
-        total_change = 0
-        print("Target: " + str(target_class) + ", Prediction: " + str(self.predict_class(output_values)))
-        for j in range(self.outputs):
-
-            weight_change.append([])
-
+        d = []
+        for j in range(len(output_values)):
             if j == int(target_class):
-                d = 1
+                d.append(1)
             else:
-                d = 0
-            for i in range(len(kernal_values)):
-                kernal_out = kernal_values[i] * self.weights[j][i]
-                change = (-1*(d-kernal_out)*kernal_out*(1-kernal_out) * kernal_values[i])
-                #print(change)
-                #print(kernal_out)
-                weight_change[j].append(-1 * change * kernal_values[i] * learning_rate)
+                d.append(0)
 
-            self.weights[j] = VectorUtilities.vector_add(self.weights[j], weight_change[j]);
-            total_change += math.sqrt(VectorUtilities.vector_magnitude_squared(weight_change[j]))
+        total_change = 0
+        change_vectors = []
+        for j in range(len(output_values)):
+            change = learning_rate * (d[j]-output_values[j])
+            change_vectors.append(VectorUtilities.vector_scale(kernal_values, change))
+            total_change += change
 
-        return total_change
+        for j in range(len(output_values)):
+            self.weights[j] = VectorUtilities.vector_add(self.weights[j], change_vectors[j])
+
+        return total_change / len(output_values)
 
     def predict_class(self, output_values):
-        highest_class_value = 0
+        highest_class_value = None
         for i in range(len(output_values)):
-            if output_values[i] > highest_class_value:
+            if highest_class_value == None or output_values[i] > highest_class_value:
                 highest_class = i
                 highest_class_value = output_values[i]
         return highest_class
