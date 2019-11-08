@@ -1,5 +1,19 @@
 # class containing methods for preprocessing the datasets
 class pre_processing:
+    """
+        A class used to represent a Radial Basis Function Neural Network
+
+        Attributes
+        ----------
+        file_name: name of file
+
+        Methods
+        -------
+        removeHeaders- Removes header from data
+        moveColumn- Restructures the data into correct format
+        removeStrings- Processes strings into numerical data
+        processClassification- Normallizes classification data utilizing probability of value occuring
+    """
     data = []
 
     def __init__(self, file_name):
@@ -36,16 +50,25 @@ class pre_processing:
 
         self.data = data
 
-    # Removes Headers from dataset
     def removeHeaders(self, data, rows):
+        """
+        Removes Headers from dataset
+        :param data: input data
+        :param rows: rows within the data
+        :return: returns processed data
+        """
         for i in range(rows):
             del data[0]
 
         print("Deleted Header Row")
         return data
 
-    # Moves first column to last column for consistency
     def moveColumn(self, data):
+        """
+        Moves columns into correct layout
+        :param data: input data
+        :return: processed data
+        """
         for i in range(len(data)):
             temp = data[i][0]
             data[i][0] = data[i][-1]
@@ -53,8 +76,12 @@ class pre_processing:
         print("Moved first column to last column")
         return data
 
-    # Removes Strings from dataset
     def removeStrings(self, data):
+        """
+        Processes strings in dataset
+        :param data: input data
+        :return: processed data
+        """
         stringlist = []
         for i in range(len(data)):
             for j in range(len(data[i])):
@@ -77,8 +104,12 @@ class pre_processing:
             print("Removed Strings")
         return data
 
-    # Converts data into a Value Difference Metric Probabilities for distance calculations
     def processClassification(self, inData):
+        """
+        Normalizes data utilizing a Value Difference Metric of Probabilities
+        :param inData: input data
+        :return: processed data
+        """
         # Dictionary for probability conversions
         table = {}
         # Stores all classes for numberical conversions later
