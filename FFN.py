@@ -29,9 +29,9 @@ class FeedForwardNeuralNetwork:
     def calc_delta(self, error, deriv):
         return error*deriv
 
-    def change_weights(self, layer, delta, weights, momentum):
+    def change_weights(self, layer, delta, weights, momentum, output):
         #print((layer.delta*momentum)/weights)
-        return -1*(momentum*layer.delta)/weights
+        return -1*(momentum**delta*weights*layer.sigmoid_deriv(output))
 
     def backprop(self, data, correct_answer, momentum, output):
         for i in reversed(range(len(self.total_layers))):
@@ -43,8 +43,8 @@ class FeedForwardNeuralNetwork:
                 next_layer = self.total_layers[i+1]
                 layer.error = np.dot(next_layer.weights, next_layer.delta)
                 layer.delta = layer.error*layer.already_activated
-            layer.weights += self.change_weights(layer, layer.delta, layer.weights, momentum)
-        #TODO
+            layer.weights += self.change_weights(layer, layer.delta, layer.weights, momentum, output)
+
     def final_pass(self, net):
         ff = self.feed_forward(net)
         if ff.ndim == 1:
@@ -104,7 +104,7 @@ ffn.add(Layer(size[1], size[1]))
 ffn.add(Layer(size[1], size[1]))
 #ffn.add(Layer(4, 4))
 #ffn.add(Layer(4, 4))
-ffn.add(Layer(size[1], 4))
+ffn.add(Layer(size[1], 6))
 
 ffn.train(x,y,0.2,500)
 final_x = ffn.final_pass(x)
