@@ -14,10 +14,10 @@ class FeedForwardNeuralNetwork:
 
     def MSE(self, net, actual):
         return np.mean(np.square(actual - ffn.feed_forward(net)))
-    
+
     def add(self, layer):
         self.total_layers.append(layer)
- 
+
     def feed_forward(self, node):
         for layer in self.total_layers:
             node = layer.activate_function(node)
@@ -25,7 +25,7 @@ class FeedForwardNeuralNetwork:
 
     def find_error(self, correct_answer, output):
         return correct_answer - output
-    
+
     def calc_delta(self, error, deriv):
         return error*deriv
 
@@ -38,7 +38,7 @@ class FeedForwardNeuralNetwork:
             layer = self.total_layers[i]
             if(layer == self.total_layers[-1]):
                 layer.error = self.find_error(correct_answer,output)
-                layer.delta = layer.sigmoid_deriv(output)*layer.error    
+                layer.delta = layer.sigmoid_deriv(output)*layer.error
             else:
                 next_layer = self.total_layers[i+1]
                 layer.error = np.dot(next_layer.weights, next_layer.delta)
@@ -56,7 +56,7 @@ class FeedForwardNeuralNetwork:
         if ffn.ndim == 1:
             return np.argmax(ffn)
         return np.argmax(ffn, axis=1)
-    
+
     def train(self, net, actual, momentum, max_iterations):
         mse = 1
         count = 0
@@ -78,18 +78,18 @@ class Layer:
         self.already_activated = None
         self.error = None
         self.delta = None
- 
+
     def activate_function(self, x):
         r = np.dot(x, self.weights) + self.bias
         self.already_activated = self.sigmoid(r)
         return self.already_activated
- 
+
     def sigmoid(self, r):
         return 1 / (1 + np.exp(-r))
- 
+
     def sigmoid_deriv(self, r):
         return r * (1 - r)
-    
+
 #TODO
 tData = pre_processing.pre_processing("data/car.data")
 trainData = dataset.dataset(tData.getData())
@@ -106,7 +106,7 @@ ffn.add(Layer(size[1], size[1]))
 ffn.add(Layer(size[1], size[1]))
 #ffn.add(Layer(4, 4))
 #ffn.add(Layer(4, 4))
-ffn.add(Layer(size[1], 4))
+ffn.add(Layer(size[1], 6))
 
 ffn.train(x,y,0.01,2000)
 print('Accuracy: %.2f%%' % (ffn.accuracy(ffn.final_pass(x), y.flatten()) * 100))
