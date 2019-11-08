@@ -4,125 +4,80 @@
 # Kyle Webster
 # Greg Martin
 import random
-import math
+import pre_processing
+import dataset
+import numpy as np
 
-class Neuron:
-    #neuron is created with a weight
-    #not sure how to represent activation function in this class
-    def __init__(self,inputs, w, b):
-        self.inputs = w
-        self.w = w
-        self.bias = b
-    def dot(self, x= []):
-        """Apply a dot product with a weight value and add a bias onto a vector x
-        :param x: The vector to have a weight applied to it. Must be the same size as w.
-        :param w: The weight vector to apply to an input vector. Must be the same size as x.
-        :param b: The bias value to be added to dot product
-        :return: the finalized dot product
-        """
-        for i in range(len(x)):
-            x[i] = x[i] * self.w[i] + self.b
-        return sum(x)
+class FeedForwardNeuralNetwork:
+    def __init__(self):
+        self.total_layers = []
 
-    def sigmoid(self, x = [], isHyper=False):
-        """Apply a sigmoid function onto a vector x
-        :param x: The input vector into the node to have the sigmoid function applied to it.
-        :param isHyper: A binary value with default value false. If False, then use Logistic sigmoid function. If True, then use hyperbolic sigmoid function.
-        :return: Returns the vector after having the sigmoid function applied
-        """
-        # Logistic Sigmoid Function
-        if isHyper is False:
-            return(1/(1+math.exp(-1*Neuron.dot(x))))
-        # Hyperbolic Tangent Sigmoid Function
-        else:
-            return(math.tan(Neuron.dot(x)))
-    def __str__(self):
-        return str(self.w)
-    def activation(self, inputs=[], isSigmoidal= False):
-        if isSigmoidal:
-            return self.sigmoid(inputs)
-        else:
-            return self.dot(inputs)
-    def getW(self):
-        return self.w
+    def MSE(self, net, actual):
+        return np.mean(np.square(actual - ffn.feed_forward(net)))
+    
+    def add(self, layer):
+        self.total_layers.append(layer)
+ 
+    def feed_forward(self, node):
+        for layer in self.total_layers:
+            node = layer.activate_function(node)
+        return node
 
-    def setW(self, w):
-        self.w = w
+    def find_error(self, correct_answer, output):
+        return correct_answer - output
+    
+    def calc_delta(self, error, deriv):
+        return error*deriv
 
-class ff_neural_net:
-    """
-        A class used to represent a Feed Forward Neural Network
-
-        Attributes
-        ----------
-        training_set: The training values
-        test_set: The values to test the model with
-        outputs: The number of outputs
-        num_hidden_layers: The number of hidden layers
-        num_hidden_nodes: The number of hidden nodes
-
-        Methods
-        -------
-        dot(x,w,b)
-            Returns the dot product between vector x and a weight vector w with a bias addition b.
-        sigmoid(self, x, isHyper=False)
-            Returns the vector x after being affected by a sigmoid function
-        train(training_rate, momentum)
-
-        test()
-
-        feed_forward(j)
-
-        back_prop(j, delta, training_rate, momentum)
-
-        activation(i, j)
-        """
-
-    def __init__(self, num_inputs, num_outputs, num_hidden_layers, num_hidden_nodes):
-        self.num_inputs = num_inputs
-        self.num_outputs = num_outputs
-        self.num_hidden_layers = num_hidden_layers
-        self.num_hidden_nodes = num_hidden_nodes
-
-        # initialize weights for hidden layers
-        self.hWeights = []
-        for i in range(self.num_hidden_layers):
-            layer_w = []
-            for j in range(self.num_hidden_nodes):
-                neuron = Neuron(random.random())
-                layer_w.append(neuron)
-            self.hWeights.append(layer_w)
-
-        self.oWeights = []
-        for j in range(self.num_outputs):
-            neuron = Neuron(random.random())
-            self.oWeights.append(neuron)
-
-
-
-
-
-
-    def train(self, training_rate, momentum):
+    def change_weights(self, layer, delta, inp, momentum):
+        return layer.delta * inp.T * momentum
+ 
+    def backprop(self, data, correct_answer, momentum, output):
         pass
-        # TODO
+        #TODO 
+    def train(self, net, actual, momentum, max_iterations):
+        mse = 1
+        count = 0
+        while(mse > 0.1):
+            for j in range(len(net)):
+                output = self.feed_forward(net[j])
+                self.backprop(net[j], actual[j], momentum, output)
+            mse = self.MSE(net, actual)
 
-    def test(self):
-        result = None
-        # TODO
-        return result
+            count+=1
 
-    def feed_forward(self, j):
-        pass
-        # TODO
+class Layer:
+    def __init__(self, num_inputs, num_neurons):
+        self.weights = np.random.rand(num_inputs, num_neurons)
+        self.bias = np.random.rand(num_neurons)
+        self.already_activated = None
+        self.error = None
+        self.delta = None
+ 
+    def activate_function(self, x):
+        r = np.dot(x, self.weights) + self.bias
+        self.already_activated = self.sigmoid(r)
+        return self.already_activated
+ 
+    def sigmoid(self, r):
+        return 1 / (1 + np.exp(-r))
+ 
+    def sigmoid_deriv(self, r):
+        return r * (1 - r)
+    
+#TODO
+tData = pre_processing.pre_processing("data/car.data")
+trainData = dataset.dataset(tData.getData())
+x=np.array(trainData.getTrainingSet())
 
-    def back_prop(self, j, delta, training_rate, momentum):
-        result = None
-        # TODO
-        return result
+#Simple test case. AND gate
+x = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+y = np.array([[0], [1], [1], [1]])
+ffn = FeedForwardNeuralNetwork()
+ffn.add(Layer(2, 4))
+ffn.add(Layer(4, 4))
+ffn.add(Layer(4, 4))
+ffn.add(Layer(4, 4))
+ffn.add(Layer(4, 3))
 
-    def activation(self, i, j):
-        result = None
-        # TODO
-        return result
-
+ffn.train(x,y,0.2,500)
