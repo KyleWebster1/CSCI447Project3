@@ -10,6 +10,7 @@ import random
 import math
 import pre_processing
 import dataset
+import VectorUtilities
 
 
 class rb_neural_net:
@@ -43,7 +44,7 @@ class rb_neural_net:
         for j in range(outputs):
             self.weights.append([])
             for i in range(gaussians):
-                self.weights[j].append(random.random())
+                self.weights[j].append(random.uniform(0,1))
 
         # find gaussians unsupervised
         knn_instance = k_nearest_neighbor()
@@ -52,7 +53,8 @@ class rb_neural_net:
             sample = self.training_set[i].copy()
             del sample[-1]
             unsupervised_set.append(sample)
-        self.gaussians = knn_instance.kMeans(unsupervised_set, gaussians)
+
+        self.gaussians, self.clusters = knn_instance.kMeans(unsupervised_set, gaussians)
         print("g: " + str(len(self.gaussians)))
 
         return
@@ -63,7 +65,7 @@ class rb_neural_net:
 
         # calculate kernal values
         for i in range(len(self.gaussians)):
-            kernal_values.append(self.gaussian(sample, i, 1))
+            kernal_values.append(self.gaussian(sample, i))
 
         # calculate output values
         output_values = []
@@ -80,28 +82,34 @@ class rb_neural_net:
         """
         print("training")
         # repeat until convergence
-        change = 1
-        while change > 0.01:
-            sample = self.training_set[random.randrange(len(self.training_set))].copy()  # choose sample at random
+        change = [1,1,1,1]
+        running_change = 4
+        while running_change > 0.0004:
+            print("running change: " + str(running_change))
+
+            sample = random.choice(self.training_set).copy()  # choose sample at random
             target = sample[-1]
             del sample[-1]
 
             kernal_values, output_values = self.run_sample(sample, target)
-
             # apply gradient descent and track change in weights
             ####I'm not super sure how he wants us to handle having multiple outputs for approximation so here I just use 1####
 
             if self.outputs == 1:
-                change = self.gradient_descent_regression(kernal_values, output_values[0], target, learning_rate)
+                change.append(self.gradient_descent_regression(kernal_values, output_values[0], target, learning_rate))
             else:
-                change = self.gradient_descent_classification(kernal_values, output_values, target, learning_rate)
+                change.append(self.gradient_descent_classification(kernal_values, output_values, target, learning_rate))
 
+            del change[0]
+            running_change = change[-1] + change[-2] + change[-3] + change[-4]
+            #print("Change: " + str(change))
         return
 
     def test(self):
         """
         :return: average mean squared error of test set
         """
+        print("test")
         if (self.outputs == 1):
             mean_sqr_err = 0
 
@@ -112,6 +120,7 @@ class rb_neural_net:
 
                 k, o = self.run_sample(sample, target)
                 err = target - o[0]
+                print("Target: " + str(target) + ", Prediction: " + str(o[0]))
                 mean_sqr_err += err * err
 
             mean_sqr_err /= len(self.test_set)
@@ -126,120 +135,77 @@ class rb_neural_net:
                 del sample[-1]
 
                 k, o = self.run_sample(sample, target)
-                print(*sample)
-                #print(*o)
-                highest_class_value = 0
-                for i in range(len(o)):
-                    if o[i] > highest_class_value:
-                        highest_class = i
-                        highest_class_value = o[i]
-                #print("Target: " + str(target) + ", Prediction: " + str(highest_class))
-                if target == highest_class:
+                prediction = self.predict_class(o)
+
+                print("Target: " + str(target) + ", Prediction: " + str(prediction))
+                if int(target) == prediction:
                     acc += 1
 
             acc /= len(self.test_set)
 
             return acc
 
-    def gaussian(self, input, i, sigma):
+    def gaussian(self, input, i):
         """
         :param i:
         :param j:
         :return:
         """
-        diffVect = self.vector_subtract(input, self.gaussians[i])
-        diffMagSqr = self.vector_magnitude_squared(diffVect)
-        result = math.exp(diffMagSqr / (-2 * sigma))
+        diffVect = VectorUtilities.vector_subtract(input, self.gaussians[i])
+        diffMagSqr = VectorUtilities.vector_magnitude_squared(diffVect)
+        result = math.exp(-diffMagSqr / (2 * math.pow(self.sigma(i), 2)))
         return result
+
+    def sigma(self, i):
+
+        mean_dist = 0
+        for n in range(len(self.clusters[i])):
+            mean_dist += math.sqrt(VectorUtilities.vector_magnitude_squared(VectorUtilities.vector_subtract(self.clusters[i][n], self.gaussians[i])))
+        mean_dist /= len(self.clusters[i])
+
+        return mean_dist
 
     def gradient_descent_regression(self, kernal_values, predicted_value, target_value, learning_rate):
 
-        error = -2 * (target_value - predicted_value)
+        error = (target_value - predicted_value)
         weight_change = []
+        #print("Target: " + str(target_value) + ", Prediction: " + str(predicted_value))
+
         for i in range(len(kernal_values)):
             weight_change.append(error * kernal_values[i] * learning_rate)
-        self.weights[0] = self.vector_add(self.weights[0], weight_change)
+        self.weights[0] = VectorUtilities.vector_add(self.weights[0], weight_change)
 
-        return math.sqrt(self.vector_magnitude_squared(weight_change))
+        return math.sqrt(VectorUtilities.vector_magnitude_squared(weight_change))
 
     def gradient_descent_classification(self, kernal_values, output_values, target_class, learning_rate):
 
         weight_change = []
-        average_change = 0
-
+        total_change = 0
+        print("Target: " + str(target_class) + ", Prediction: " + str(self.predict_class(output_values)))
         for j in range(self.outputs):
 
             weight_change.append([])
 
+            if j == int(target_class):
+                d = 1
+            else:
+                d = 0
             for i in range(len(kernal_values)):
                 kernal_out = kernal_values[i] * self.weights[j][i]
-                change = (-1*(1-kernal_out)*kernal_out*(1-kernal_out) * kernal_values[i])
+                change = (-1*(d-kernal_out)*kernal_out*(1-kernal_out) * kernal_values[i])
+                #print(change)
+                #print(kernal_out)
                 weight_change[j].append(-1 * change * kernal_values[i] * learning_rate)
 
-            self.weights[j] = self.vector_add(self.weights[j], weight_change[j]);
-            average_change += math.sqrt(self.vector_magnitude_squared(weight_change[j]))
+            self.weights[j] = VectorUtilities.vector_add(self.weights[j], weight_change[j]);
+            total_change += math.sqrt(VectorUtilities.vector_magnitude_squared(weight_change[j]))
 
-        average_change /= self.outputs
+        return total_change
 
-        return average_change
-
-    def vector_scal(self, x, f):
-        """
-        f * Vector x
-        """
-        out = []
-        for i in range(len(x)):
-            out.append(x[i] * f)
-
-        return out
-
-    def vector_add(self, x, y):
-        """
-        Vector x + Vector y
-        """
-        if (len(x) != len(y)):
-            print("add Vectors not same len")
-            print("x:")
-            for i in range(len(x)):
-                print(x[i])
-            print("y:")
-            for i in range(len(y)):
-                print(y[i])
-            return
-            return
-
-        z = []
-        for i in range(len(x)):
-            z.append(x[i]+y[i])
-
-        return z
-
-    def vector_subtract(self, x, y):
-        """
-        Vector x - Vector y
-        """
-        z = []
-        if (len(x) != len(y)):
-            print("sub Vectors not same len")
-            print("x:")
-            for i in range(len(x)):
-                print(x[i])
-            print("y:")
-            for i in range(len(y)):
-                print(y[i])
-            return
-
-        for i in range(len(x)):
-            z.append(x[i] - y[i])
-
-        return z
-
-    def vector_magnitude_squared(self, x):
-        """
-        ||Vector x||^2
-        """
-        mag = 0
-        for i in range(len(x)):
-            mag += x[i] * x[i]
-
-        return mag
+    def predict_class(self, output_values):
+        highest_class_value = 0
+        for i in range(len(output_values)):
+            if output_values[i] > highest_class_value:
+                highest_class = i
+                highest_class_value = output_values[i]
+        return highest_class

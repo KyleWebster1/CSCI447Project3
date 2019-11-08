@@ -8,6 +8,7 @@ import math
 import FFN
 import random
 import time
+import VectorUtilities
 from operator import add
 import sys
 
@@ -22,7 +23,7 @@ def minkowskiDistance(v1, v2, p):
         distance = 0
         # assume: v1 and v2 are equal length
         for x in range(len(v1) - 1):
-            distance += pow((abs(v1[x] - v2[x])), p)
+            distance = pow((abs(v1[x] - v2[x])), p)
         return pow(distance, 1.0 / p)
 
 
@@ -120,56 +121,42 @@ class k_nearest_neighbor:
     # Reducing dataset to centroids centered around the mean
     def kMeans(self, data, k):
         meansAfter = []
-        for d in data:
-            u = []
-            change = 1
+        u = []
+        centroids = []
+        change = 1
+        for i in range(k):
+            u.append(random.choice(data))
+            centroids.append([])
+
+        while change > .01:
             for i in range(k):
-                u.append(random.choice(d))
-            while change > .01:
-                centroids = {}
-                for x in d:
-                    minDistance = None
-                    min = None
-                    for m in u:
-                        dist = minkowskiDistance(x, m, 2)
-                        if minDistance == None:
-                            minDistance = dist
-                            min = m
-                        elif dist < minDistance:
-                            minDistance = dist
-                            min = m
-                    a = u.index(min)
-                    try:
-                        centroids[a].append(x)
-                    except:
-                        centroids.setdefault(a, [])
-                        centroids[a].append(x)
-                for i in u:
-                    a = u.index(i)
-                    try:
-                        temp = centroids[a]
-                    except:
-                        del u[u.index(i)]
-                    total = temp[0]
-                    count = 1
-                    for j in temp[1:]:
-                        total = list(map(add, total, j))
-                        count += 1
-                    # print(total)
-                    mean = [x / float(count) for x in total]
-                    oldU = u
-                    try:
-                        u[u.index(i)] = mean
-                    except:
-                        mean = mean
-                comb = 0
-                countC = 0
-                for i in range(len(u)):
-                    comb += minkowskiDistance(u[i], oldU[i], 2)
-                    countC += 1
-                change = comb / float(countC)
-            meansAfter.append(u)
-        return meansAfter
+                centroids[i] = []
+
+            for x in data:
+                minDistance = None
+                min = None
+                for m in range(len(u)):
+                    dist = math.sqrt(VectorUtilities.vector_magnitude_squared(VectorUtilities.vector_subtract(x,u[m])))
+                    if minDistance == None:
+                        minDistance = dist
+                        min = m
+                    elif dist < minDistance:
+                        minDistance = dist
+                        min = m
+                centroids[min].append(x)
+
+            change = 0
+            for i in range(len(u)):
+                average_vect = u[i]
+                for x in range(len(centroids[i])):
+                    average_vect = VectorUtilities.vector_add(average_vect,centroids[i][x])
+                for j in range(len(average_vect)):
+                    average_vect[j] /= len(centroids[i]) + 1
+                change += minkowskiDistance(u[i], average_vect, 2)
+                u[i] = average_vect
+
+
+        return u, centroids
 
     # Function to determine the Medoids for K-Nearest Clustering
     def kMedoids(self, data, k):
