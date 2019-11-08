@@ -29,33 +29,39 @@ class FeedForwardNeuralNetwork:
     def calc_delta(self, error, deriv):
         return error*deriv
 
-    def change_weights(self, layer, delta, weights, momentum):
+    def change_weights(self, layer, delta, weights, momentum, inp):
         #print((layer.delta*momentum)/weights)
-        return -1*(momentum*layer.delta)/weights
+        return delta*inp.T*momentum
 
     def backprop(self, data, correct_answer, momentum, output):
         for i in reversed(range(len(self.total_layers))):
             layer = self.total_layers[i]
-            if(i==len(self.total_layers)-1):
+            if(layer == self.total_layers[-1]):
                 layer.error = self.find_error(correct_answer,output)
                 layer.delta = layer.sigmoid_deriv(output)*layer.error    
             else:
                 next_layer = self.total_layers[i+1]
                 layer.error = np.dot(next_layer.weights, next_layer.delta)
-                layer.delta = layer.error*layer.already_activated
-            layer.weights += self.change_weights(layer, layer.delta, layer.weights, momentum)
+                layer.delta = layer.error*layer.sigmoid_deriv(layer.already_activated)
+        for i in range(len(self.total_layers)):
+            layer = self.total_layers[i]
+            if(i==0):
+                inp = np.atleast_2d(data)
+            else:
+                inp = np.atleast_2d(self.total_layers[i-1].already_activated)
+            layer.weights += layer.delta * inp.T * momentum
         #TODO
     def final_pass(self, net):
-        ff = self.feed_forward(net)
-        if ff.ndim == 1:
-            return np.argmax(ff)
-        return np.argmax(ff, axis=1)
+        ffn = self.feed_forward(net)
+        if ffn.ndim == 1:
+            return np.argmax(ffn)
+        return np.argmax(ffn, axis=1)
     
     def train(self, net, actual, momentum, max_iterations):
         mse = 1
         count = 0
         #while(mse > 0.1):
-        for i in range(500):
+        for i in range(max_iterations):
             for j in range(len(net)):
                 output = self.feed_forward(net[j])
                 self.backprop(net[j], actual[j], momentum, output)
@@ -63,11 +69,7 @@ class FeedForwardNeuralNetwork:
             count+=1
 
     def accuracy(self,true, pred):
-        count = 0
-        for i in range(len(true)):
-            if(true[i] == pred[i]):
-                count+=1
-        return count/len(true)
+        return (pred == true).mean()
 
 class Layer:
     def __init__(self, num_inputs, num_neurons):
@@ -106,8 +108,6 @@ ffn.add(Layer(size[1], size[1]))
 #ffn.add(Layer(4, 4))
 ffn.add(Layer(size[1], 4))
 
-ffn.train(x,y,0.2,500)
-final_x = ffn.final_pass(x)
-print(final_x)
-print(y)
-print(ffn.accuracy(final_x,y))
+ffn.train(x,y,0.01,2000)
+print('Accuracy: %.2f%%' % (ffn.accuracy(ffn.final_pass(x), y.flatten()) * 100))
+#print(ffn.accuracy(final_x,y))
