@@ -178,7 +178,171 @@ training
 testing
 Mean Squared Error: 42517.54911396424
 Average Mean Squared Error: 4251.754911396424
-
+=========================================
+data/machine.data
+=========================================
+Removed Strings
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 129267.82105373913
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 131178.05475537005
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 131783.05710340914
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 133290.68517465692
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 151871.03084177675
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 152303.3300802326
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 154602.52990242935
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 180169.07238365035
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 186558.62172290005
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 296557.277894523
+Average Mean Squared Error: 29655.7277894523
+=========================================
+data/winequality-red.csv
+=========================================
+Deleted Header Row
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 3.6291815168568022
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 7.406132523482372
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 12.389401565850672
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 17.584903804082494
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 21.286469246232176
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 28.708785977022895
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 39.3761789958258
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 45.234567280129745
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 47.87104334681152
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 52.789533593273106
+Average Mean Squared Error: 5.278953359327311
+=========================================
+data/winequality-white.csv
+=========================================
+Deleted Header Row
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 3.7847719261125254
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 9.483421579775184
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 15.056134355371892
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 19.122973105229704
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 22.490026954091046
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 28.43260502196922
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 34.292466746468506
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 42.23172009228404
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 45.98474362069878
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 50.40064844161361
+Average Mean Squared Error: 5.040064844161361
 =========================================
 Feed Forward Network CLASSIFICATION
 =========================================
