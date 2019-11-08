@@ -78,7 +78,7 @@ Moved first column to last column
 Removed Strings
 6
 Accuracy for 0 Layers: 18.57%
-Accuracy for 1 Layers: 0.00%
+Accuracy for 1 Layers: 33.29%
 Accuracy for 2 Layers: 33.35%
 =========================================
 data/segmentation.data
