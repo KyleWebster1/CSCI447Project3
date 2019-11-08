@@ -12,8 +12,14 @@ import VectorUtilities
 from operator import add
 import sys
 
-# generalized minkowski distance, where p is either input integer or string 'inf'
 def minkowskiDistance(v1, v2, p):
+    """
+    generalized minkowski distance calculation
+    :param v1: input vector 1
+    :param v2: input vector 2
+    :param p: value to raise the vectors by, distinguises between the norms
+    :return: returns the distance between the vectors
+    """
     if type(p) == str:
         maxDistance = 0
         for x in range(len(v1)):
@@ -29,6 +35,11 @@ def minkowskiDistance(v1, v2, p):
 
 # randomize data so that when we select training and test sets, we get a variety of each class
 def randomizeData(data):
+    """
+    Randomizes data for training
+    :param data:
+    :return:
+    """
     randomSet = []
     copy = list(data)
     while len(randomSet) < len(data):

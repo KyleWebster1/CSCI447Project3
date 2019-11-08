@@ -84,8 +84,7 @@ class rb_neural_net:
         # repeat until convergence
         change = [1,1,1,1]
         running_change = 4
-        while running_change > 0:
-
+        while running_change > 0.01:
             sample = random.choice(self.training_set).copy()  # choose sample at random
             target = sample[-1]
             del sample[-1]
@@ -149,6 +148,7 @@ class rb_neural_net:
         diffVect = VectorUtilities.vector_subtract(input, self.gaussians[i])
         diffMagSqr = VectorUtilities.vector_magnitude_squared(diffVect)
         result = math.exp(-diffMagSqr / (2 * math.pow(self.sigma(i), 2)))
+
         return result
 
     def sigma(self, i):

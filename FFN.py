@@ -13,7 +13,7 @@ class FeedForwardNeuralNetwork:
         self.total_layers = []
 
     def MSE(self, net, actual):
-        return np.mean(np.square(actual - ffn.feed_forward(net)))
+        return np.mean(np.square(actual - self.feed_forward(net)))
 
     def add(self, layer):
         self.total_layers.append(layer)
