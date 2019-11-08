@@ -110,4 +110,4 @@ ffn.add(Layer(size[1], 6))
 
 ffn.train(x,y,0.01,2000)
 print('Accuracy: %.2f%%' % (ffn.accuracy(ffn.final_pass(x), y.flatten()) * 100))
-#print(ffn.accuracy(final_x,y))
+#print(ffn.accuracy(final_x,y))"""
