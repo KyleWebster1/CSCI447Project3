@@ -178,44 +178,6 @@ training
 testing
 Mean Squared Error: 42517.54911396424
 Average Mean Squared Error: 4251.754911396424
-=========================================
-data/forestfires.csv
-=========================================
-g: 8
-o: 1
-Mean Squared Error: 0.2837976593050959
-g: 8
-o: 1
-Mean Squared Error: 0.30172262668104816
-g: 8
-o: 1
-Mean Squared Error: 0.5844352886576796
-g: 8
-o: 1
-training
-testing
-Mean Squared Error: 46.29351313219485
-g: 8
-o: 1
-Mean Squared Error: 27712.287759681716
-g: 8
-o: 1
-Mean Squared Error: 27916.348911022204
-g: 8
-o: 1
-training
-testing
-Mean Squared Error: 28040.04440404997
-g: 8
-o: 1
-Mean Squared Error: 28943.246330024645
-g: 8
-o: 1
-Mean Squared Error: 40689.33173528004
-g: 8
-o: 1
-Mean Squared Error: 42586.817331161656
-Average Mean Squared Error: 4258.681733116166
 
 =========================================
 Feed Forward Network CLASSIFICATION
