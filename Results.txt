@@ -67,3 +67,59 @@ g: 85
 o: 8
 Accuracy: 0.0
 Average Accuracy: 10.476190476190474%
+
+=========================================
+Feed Forward Network CLASSIFICATION
+=========================================
+=========================================
+data/car.data
+=========================================
+Moved first column to last column
+Removed Strings
+6
+Accuracy for 0 Layers: 18.57%
+Accuracy for 1 Layers: 0.00%
+Accuracy for 2 Layers: 33.35%
+=========================================
+data/segmentation.data
+=========================================
+Deleted Header Row
+Moved first column to last column
+Removed Strings
+19
+Accuracy for 0 Layers: 0.53%
+Accuracy for 1 Layers: 3.17%
+Accuracy for 2 Layers: 0.00%
+=========================================
+data/abalone.data
+=========================================
+Removed Strings
+8
+Accuracy for 0 Layers: 0.00%
+Accuracy for 1 Layers: 0.00%
+Accuracy for 2 Layers: 0.00%
+
+=========================================
+Feed Forward Network Regression
+=========================================
+=========================================
+data/forestfires.csv
+=========================================
+Deleted Header Row
+Removed Strings
+12
+Mean Squared Error for 0  Layer:  33.560944206008585
+Mean Squared Error for 1  Layer:  0.09742489270386268
+=========================================
+data/machine.data
+=========================================
+Removed Strings
+9
+Mean Squared Error for 0  Layer:  27149.8835978836
+Mean Squared Error for 1  Layer:  27874.714285714286
+=========================================
+data/winequality-red.csv
+=========================================
+Deleted Header Row
+Mean Squared Error for 0  Layer:  20.24677025462963
+Mean Squared Error for 1  Layer:  111.04440914351851
