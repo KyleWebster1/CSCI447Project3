@@ -30,7 +30,8 @@ class FeedForwardNeuralNetwork:
         return error*deriv
 
     def change_weights(self, layer, delta, weights, momentum):
-        return layer.delta * weights * momentum
+        #print((layer.delta*momentum)/weights)
+        return -1*(momentum*layer.delta)/weights
 
     def backprop(self, data, correct_answer, momentum, output):
         for i in reversed(range(len(self.total_layers))):
@@ -43,7 +44,13 @@ class FeedForwardNeuralNetwork:
                 layer.error = np.dot(next_layer.weights, next_layer.delta)
                 layer.delta = layer.error*layer.already_activated
             layer.weights += self.change_weights(layer, layer.delta, layer.weights, momentum)
-        #TODO 
+        #TODO
+    def final_pass(self, net):
+        ff = self.feed_forward(net)
+        if ff.ndim == 1:
+            return np.argmax(ff)
+        return np.argmax(ff, axis=1)
+    
     def train(self, net, actual, momentum, max_iterations):
         mse = 1
         count = 0
@@ -52,8 +59,15 @@ class FeedForwardNeuralNetwork:
             for j in range(len(net)):
                 output = self.feed_forward(net[j])
                 self.backprop(net[j], actual[j], momentum, output)
-            mse = self.MSE(net, actual)
+            #mse = self.MSE(net, actual)
             count+=1
+
+    def accuracy(self,true, pred):
+        count = 0
+        for i in range(len(true)):
+            if(true[i] == pred[i]):
+                count+=1
+        return count/len(true)
 
 class Layer:
     def __init__(self, num_inputs, num_neurons):
@@ -78,16 +92,22 @@ class Layer:
 tData = pre_processing.pre_processing("data/car.data")
 trainData = dataset.dataset(tData.getData())
 x=np.array(trainData.getTrainingSet(0))
-print(x.shape) #6 is input nodes Last column is correct_answer
-
+x = x[:,:-1]
+y = x[:,-1]
+size = x.shape #6 is input nodes Last column is correct_answer
+print(size[1])
 #Simple test case. AND gate
-x = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-y = np.array([[0], [1], [1], [1]])
+#x = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+#y = np.array([[0], [1], [1], [1]])
 ffn = FeedForwardNeuralNetwork()
-ffn.add(Layer(2, 4))
-ffn.add(Layer(4, 4))
-ffn.add(Layer(4, 4))
-ffn.add(Layer(4, 4))
-ffn.add(Layer(4, 3))
+ffn.add(Layer(size[1], size[1]))
+ffn.add(Layer(size[1], size[1]))
+#ffn.add(Layer(4, 4))
+#ffn.add(Layer(4, 4))
+ffn.add(Layer(size[1], 4))
 
 ffn.train(x,y,0.2,500)
+final_x = ffn.final_pass(x)
+print(final_x)
+print(y)
+print(ffn.accuracy(final_x,y))
