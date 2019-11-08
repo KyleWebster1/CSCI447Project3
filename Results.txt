@@ -67,6 +67,155 @@ g: 85
 o: 8
 Accuracy: 0.0
 Average Accuracy: 10.476190476190474%
+=========================================
+data/abalone.data
+=========================================
+Removed Strings
+g: 3195
+o: 28
+training
+testing
+Accuracy: 3.117505995203837
+g: 3105
+o: 28
+training
+testing
+Accuracy: 3.117505995203837
+g: 3179
+o: 28
+training
+testing
+Accuracy: 2.6378896882494005
+g: 3150
+o: 28
+training
+testing
+Accuracy: 3.357314148681055
+g: 3168
+o: 28
+training
+testing
+Accuracy: 5.0359712230215825
+g: 3126
+o: 28
+training
+testing
+Accuracy: 3.117505995203837
+g: 3163
+o: 28
+training
+testing
+Accuracy: 5.515587529976019
+g: 3140
+o: 28
+training
+testing
+Accuracy: 2.877697841726619
+g: 3161
+o: 28
+training
+testing
+Accuracy: 4.07673860911271
+g: 3148
+o: 28
+training
+testing
+Accuracy: 1.9184652278177456
+Average Accuracy: 3.477218225419664%
+=========================================
+data/forestfires.csv
+=========================================
+Deleted Header Row
+Removed Strings
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 0.0011589165171914887
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 0.0034349993127793525
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 1.658713404388688
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 30.531020370803805
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 27696.665511407213
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 27902.029117513794
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 28024.196177051377
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 28928.008141676542
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 40673.98695063691
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 42517.54911396424
+Average Mean Squared Error: 4251.754911396424
+=========================================
+data/forestfires.csv
+=========================================
+g: 8
+o: 1
+Mean Squared Error: 0.2837976593050959
+g: 8
+o: 1
+Mean Squared Error: 0.30172262668104816
+g: 8
+o: 1
+Mean Squared Error: 0.5844352886576796
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 46.29351313219485
+g: 8
+o: 1
+Mean Squared Error: 27712.287759681716
+g: 8
+o: 1
+Mean Squared Error: 27916.348911022204
+g: 8
+o: 1
+training
+testing
+Mean Squared Error: 28040.04440404997
+g: 8
+o: 1
+Mean Squared Error: 28943.246330024645
+g: 8
+o: 1
+Mean Squared Error: 40689.33173528004
+g: 8
+o: 1
+Mean Squared Error: 42586.817331161656
+Average Mean Squared Error: 4258.681733116166
 
 =========================================
 Feed Forward Network CLASSIFICATION
@@ -78,7 +227,7 @@ Moved first column to last column
 Removed Strings
 6
 Accuracy for 0 Layers: 18.57%
-Accuracy for 1 Layers: 33.29%
+Accuracy for 1 Layers: 0.00%
 Accuracy for 2 Layers: 33.35%
 =========================================
 data/segmentation.data
