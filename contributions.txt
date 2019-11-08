@@ -1,4 +1,4 @@
 Kyle Webster: Refactored KNN and debugged RBF. Created activation sigmoid function.
 Alex: Main coder for RBF
-Matt: Made Driver Classes
-Greg: Main coder for KNN
+Matt: Made Driver Classes. Coder for FFN
+Greg: Main coder for FFN
