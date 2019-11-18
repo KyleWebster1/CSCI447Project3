@@ -49,6 +49,8 @@ class pre_processing:
                           "data/abalone.data"]
         if file_name in classification:
             data = self.processClassification(data)
+        else:
+            data = self.removeStrings(data)
         self.data = data
 
     def removeHeaders(self, data, rows):
