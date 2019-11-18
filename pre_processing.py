@@ -39,15 +39,16 @@ class pre_processing:
             data = self.removeHeaders(data, 5)
 
         # move class to rightmost column
-        if (file_name == "data/segmentation.data" or file_name == "data/car.data"):
+        if (file_name == "data/segmentation.data"):
             data = self.moveColumn(data)
 
         # remove strings
-        data = self.removeStrings(data)
+        #data = self.removeStrings(data)
         classification = ["data/segmentation.data",
                           "data/car.data",
                           "data/abalone.data"]
-
+        if file_name in classification:
+            data = self.processClassification(data)
         self.data = data
 
     def removeHeaders(self, data, rows):
@@ -116,7 +117,9 @@ class pre_processing:
         classes = []
 
         # Generates and maps classes to nested dictinary, sorted by class, attribute column, and individual values
-        for c in inData:
+        for i,c in enumerate(inData):
+            if (c[-1].endswith('\n')):
+                inData[i][-1] = inData[i][-1][:-1]
             if c[-1] not in classes:
                 classes.append(c[-1])
             table.setdefault(classes.index(c[-1]), {})
@@ -139,14 +142,14 @@ class pre_processing:
                 # print("Class:", key, "Attribute:", x, "Values:", table[key][x])
         # Uses the values in dictionary to convert the input data
         for i, c in enumerate(inData):
+            temp = classes.index(c[-1])
             for idx, a in enumerate(c[:len(c) - 1]):
                 try:
-                    temp = classes.index(c[-1])
-                    inData[i][0] = temp
-                    inData[i][idx + 1] = table[temp][idx + 1][a]
+                    inData[i][-1] = temp
+                    inData[i][idx] = table[temp][idx + 1][a]
                 except:
-                    inData[i][0] = c[-1]
-                    inData[i][idx + 1] = table[c[-1]][idx + 1][int(a)]
+                    inData[i][-1] = c[-1]
+                    inData[i][idx] = table[c[-1]][idx + 1][int(a)]
         return (inData)
 
     def getData(self):

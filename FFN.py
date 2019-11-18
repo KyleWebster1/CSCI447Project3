@@ -9,99 +9,94 @@ import dataset
 import numpy as np
 
 class FeedForwardNeuralNetwork:
-    def __init__(self):
-        self.total_layers = []
+    #Inspired from code from hackermoon.com blogpost by Niranjan Kumar
+    def __init__(self, inputs, outputs, hiddenLayer = [3]):
+        self.input = inputs
+        self.outputNumber = outputs
+        self.numberLayers = len(hiddenLayer)
+        self.sizes = [inputs] + hiddenLayer + [outputs]
+        self.bias = {}
+        self.weight = {}
+        for i in range(self.numberLayers + 1):
+            self.weight[i + 1] = np.random.rand(self.sizes[i], self.sizes[i + 1])
+            self.bias[i + 1] = np.zeros((1, self.sizes[i + 1]))
 
-    def MSE(self, net, actual):
-        return np.mean(np.square(actual - self.feed_forward(net)))
+    def sigmoid(self, x):
+        return 1 / (1 + np.exp(-x))
 
-    def add(self, layer):
-        self.total_layers.append(layer)
+    def sigmoid_deriv(self, x):
+        s = self.sigmoid(x)
+        return s * (1 - s)
 
-    def feed_forward(self, node):
-        for layer in self.total_layers:
-            node = layer.activate_function(node)
-        return node
-
-    def find_error(self, correct_answer, output):
-        return correct_answer - output
-
-    def calc_delta(self, error, deriv):
-        return error*deriv
-
-    def change_weights(self, layer, delta, weights, momentum, output):
-        #print((layer.delta*momentum)/weights)
-        return -1*(momentum**delta*weights*layer.sigmoid_deriv(output))
-
-    def backprop(self, data, correct_answer, momentum, output):
-        for i in reversed(range(len(self.total_layers))):
-            layer = self.total_layers[i]
-            if(layer == self.total_layers[-1]):
-                layer.error = self.find_error(correct_answer,output)
-                layer.delta = layer.sigmoid_deriv(output)*layer.error
-            else:
-                next_layer = self.total_layers[i+1]
-                layer.error = np.dot(next_layer.weights, next_layer.delta)
-                layer.delta = layer.error*layer.sigmoid_deriv(layer.already_activated)
-        for i in range(len(self.total_layers)):
-            layer = self.total_layers[i]
-            if(i==0):
-                inp = np.atleast_2d(data)
-            else:
-                inp = np.atleast_2d(self.total_layers[i-1].already_activated)
-            layer.weights += self.change_weights(layer, layer.delta, layer.weights, momentum, output)
-        #TODO
-    def final_pass(self, net):
-        ffn = self.feed_forward(net)
-        if ffn.ndim == 1:
-            return np.argmax(ffn)
-        return np.argmax(ffn, axis=1)
-
-    def train(self, net, actual, momentum, max_iterations):
-        mse = 1
-        count = 0
-        #while(mse > 0.1):
-        for i in range(max_iterations):
-            for j in range(len(net)):
-                output = self.feed_forward(net[j])
-                self.backprop(net[j], actual[j], momentum, output)
-            #mse = self.MSE(net, actual)
-            count+=1
+    def MSE(self, pred, actual):
+        return np.mean(np.square(actual - pred))
 
     def accuracy(self,true, pred):
-        return (pred == true).mean()
+        truePositive = 0
+        for i in range(len(true)):
+            if pred[i]==true[i]:
+                truePositive+=1
+        return truePositive/len(true)
 
-class Layer:
-    def __init__(self, num_inputs, num_neurons):
-        self.weights = np.random.rand(num_inputs, num_neurons)
-        self.bias = np.random.rand(num_neurons)
-        self.already_activated = None
-        self.error = None
-        self.delta = None
+    def feedForward(self,x):
+        self.A = {}
+        self.H = {}
+        self.H[0] = x
+        for i in range(self.numberLayers):
+            self.A[i + 1] = np.matmul(self.H[i], self.weight[i + 1]) + self.bias[i + 1]
+            self.H[i + 1] = self.sigmoid(self.A[i + 1])
+        self.A[self.numberLayers + 1] = np.matmul(self.H[self.numberLayers], self.weight[self.numberLayers + 1]) + self.bias[self.numberLayers + 1]
+        self.H[self.numberLayers + 1] = self.sigmoid(self.A[self.numberLayers + 1])
+        return self.H[self.numberLayers + 1]
 
-    def activate_function(self, x):
-        r = np.dot(x, self.weights) + self.bias
-        self.already_activated = self.sigmoid(r)
-        return self.already_activated
+    def backprop(self, x, y):
+        self.dW = {}
+        self.dB = {}
+        self.dH = {}
+        self.dA = {}
+        L = self.numberLayers + 1
+        self.dA[L] = (self.H[L]- y[:,None])
+        for k in range(L, 0, -1):
+            self.dW[k] = np.matmul(self.H[k - 1].T, self.dA[k])
+            self.dB[k] = self.dA[k]
+            self.dH[k - 1] = np.matmul(self.dA[k], self.weight[k].T)
+            self.dA[k - 1] = np.multiply(self.dH[k - 1], self.sigmoid_deriv(self.H[k - 1]))
+# class Layer:
+#     def __init__(self, num_inputs, num_neurons):
+#         self.weights = np.random.rand(num_inputs, num_neurons)
+#         self.bias = np.random.rand(num_neurons)
+#         self.already_activated = None
+#         self.error = None
+#         self.delta = None
+#
+#     def activate_function(self, x):
+#         r = np.dot(x, self.weights) + self.bias
+#         self.already_activated = self.sigmoid(r)
+#         return self.already_activated
+#
+#     def sigmoid(self, r):
+#         return 1 / (1 + np.exp(-r))
+#
+#     def sigmoid_deriv(self, r):
+#         return r * (1 - r)
 
-    def sigmoid(self, r):
-        return 1 / (1 + np.exp(-r))
-
-    def sigmoid_deriv(self, r):
-        return r * (1 - r)
-
-#TODO
-"""tData = pre_processing.pre_processing("data/car.data")
+tData = pre_processing.pre_processing("data/car.data")
 trainData = dataset.dataset(tData.getData())
-x=np.array(trainData.getTrainingSet(0))
-x = x[:,:-1]
-y = x[:,-1]
-size = x.shape #6 is input nodes Last column is correct_answer
-print(size[1])
+original=np.array(trainData.getTrainingSet(0))
+x = original[:,:-1]
+y = original[:,-1]
+xsize = x.shape #6 is input nodes Last column is correct_answer
+ysize = np.unique(y).shape
 #Simple test case. AND gate
 #x = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
 #y = np.array([[0], [1], [1], [1]])
-ffn = FeedForwardNeuralNetwork()
+ffn = FeedForwardNeuralNetwork(xsize[1], ysize[0], [xsize[1]]*2)
+#print(ffn.feedForward(x))
+print(ffn.weight)
+ffn.feedForward(x)
+ffn.backprop(x,y)
+print(ffn.weight)
+"""
 ffn.add(Layer(size[1], size[1]))
 ffn.add(Layer(size[1], size[1]))
 #ffn.add(Layer(4, 4))
