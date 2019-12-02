@@ -20,16 +20,17 @@ class particle_swarm:
 
         net = FFN.FeedForwardNeuralNetwork(len(training_set[0]) - 1, len(training_set[0]) - 1, [1])
         self.net = net
-        self.weightSize = len(net.weight[1][0])
-        self.weightCount =  len(net.weight[1])
+        
+        self.weightSize = net.sizes[1]
+        self.weightCount =  net.sizes[0]
         self.layerCount = net.numberLayers
-        self.dimensions = weightSize * weightCount * layerCount
-
+        self.dimensions = self.weightSize * self.weightCount * self.layerCount
+        print(self.dimensions)
         self.population = []
-        for i in range(3 * d):
-            population.append(particle(np.random.randn(dimensions)))
+        for i in range(3 * self.dimensions):
+            self.population.append(particle(numpy.random.randn(self.dimensions)))
 
-        self.g_best = [0] * dimensions
+        self.g_best = [0] * self.dimensions
         self.inertiaW = inertiaW
         self.localW = localW
         self.globalW = globalW
@@ -37,18 +38,19 @@ class particle_swarm:
     def train(self):
         iteration = 0
         while (iteration < 1000):
-            fg = try_weight(g_best)
-            for p in population:
-                fx = try_weight(p.state)
-                fp = try_weight(p.p_best)
+            fg = self.try_weight(self.g_best)
+            print("iteration: " + str(iteration) + ", gBest: " + str(fg))
+            for p in self.population:
+                fx = self.try_weight(p.state)
+                fp = self.try_weight(p.p_best)
                 if (fx < fp):
                     p.p_best = p.state
                     if (fx < fg):
-                        g_best = newState
-                        fg = try_weight(g_best)
-            for p in population:
-                p.velocity = find_velocity(p)
-                p.state = np.add(p, p.velocity)
+                        self.g_best = newState
+                        fg = self.try_weight(g_best)
+            for p in self.population:
+                p.velocity = self.find_velocity(p)
+                p.state = numpy.add(p, p.velocity)
 
     def find_velocity(self, particle):
         return (inertiaW * particle.velocity) + (localW * particle.p_best) + (globalW * g_best)
@@ -56,26 +58,28 @@ class particle_swarm:
 
     def try_weight(self, w):
 
-        net.weight = makeWeightMatrix(self, w)
+        self.net.weight = self.makeWeightMatrix(w)
 
         mse = 0
-        for x in training_set:
-            mse += net.regressionPred(x)
+        for x in self.training_set:
+            print(*x)
+            mse += self.net.regressionPred(x)
 
-        mse /= len(training_set)
+        mse /= len(self.training_set)
 
         return mse
 
     def makeWeightMatrix(self, w):
-        matrix = [[]]
-        for l in range(layerCount):
+        matrix = []
+        for l in range(self.layerCount):
             matrix.append([])
             n = 0
-            for i in range(weightCount):
-                for j in range(weightSize):
-                    matrix[l].append(weight_array[n])
+            for i in range(self.weightCount):
+                for j in range(self.weightSize):
+                    matrix[l].append(w[n])
                     n += 1
         return matrix
 tData = pre_processing.pre_processing("data/forestfires.csv")
 trainData = dataset.dataset(tData.getData())
 swarm = particle_swarm(trainData.getTrainingSet(0), trainData.getTestSet(0), .1, .4, .5)
+swarm.train()
