@@ -89,7 +89,7 @@ class FeedForwardNeuralNetwork:
             # print()
             # print(self.bias)
             # print()
-
+"""
 tData = pre_processing.pre_processing("data/machine.data")
 trainData = dataset.dataset(tData.getData())
 original=np.array(trainData.getTrainingSet(0))
@@ -145,7 +145,7 @@ clas = ffn.classificationPred(x)
 print(ffn.accuracy(y, clas))
 
 
-"""
+
 ffn.add(Layer(size[1], size[1]))
 ffn.add(Layer(size[1], size[1]))
 #ffn.add(Layer(4, 4))
