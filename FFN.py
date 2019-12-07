@@ -8,41 +8,107 @@ import pre_processing
 import dataset
 import numpy as np
 
+
+class Layer:
+
+    def __init__(self,weightMatrix, isLast):
+        self.weightMatrix = weightMatrix
+        self.isLast = isLast
+        self.layerOutput = []
+
+    def feedForward(self, nodeInput):
+
+        v = np.matmul(nodeInput,self.weightMatrix)
+        if self.isLast:
+            v = [v]
+
+        v = sigmoid(v)
+        return v
+
+    def backPropDelta(self, output, expected):
+
+        matrix = numpy.transpose(self.weightMatrix)
+        delta = []
+        for i in range(len(matrix)):
+            delta.append(numpy.multiply(matrix[i],sigDeriv(output)))
+
+        return numpy.transpose(delta)
+
+    def sigmoid(self, input):
+        for i in range(len(v)):
+            v[i] = 1 / (1 + np.exp(-input[i]))
+        return v
+
+    def sigDeriv(self, output):
+        for i in range(len(v)):
+            v[i] = output[i] * (1 - output[i])
+        return v
+
+
+
 class FeedForwardNeuralNetwork:
     #Inspired from code from hackermoon.com blogpost by Niranjan Kumar
-    def __init__(self, inputs, outputs, hiddenLayer = [3]):
+    def __init__(self, inputs, outputs, hiddenLayers):
         self.input = inputs
         self.outputNumber = outputs
-        self.numberLayers = len(hiddenLayer)
-        self.sizes = [inputs] + hiddenLayer + [outputs]
-        self.bias = {}
-        self.weight = {}
-        for i in range(self.numberLayers + 1):
-            self.weight[i + 1] = np.random.rand(self.sizes[i], self.sizes[i + 1])
-            self.bias[i + 1] = np.zeros((1, self.sizes[i + 1]))
+        self.numberLayers = hiddenLayers + 1
 
-    def sigmoid(self, x):
-        return 1 / (1 + np.exp(-x))
+        self.layers = []
 
-    def sigmoid_deriv(self, x):
-        s = self.sigmoid(x)
-        return s * (1 - s)
-    def regressionPred(self, x):
-        pred = []
+        for i in range(self.numberLayers - 1):
+            self.layers.append(Layer(np.random.rand(inputs, inputs), False))
+        self.layers.append(Layer(np.random.rand(outputs,inputs), True))
+
+    def makePrediction(self, x):
         #print(x)
-        for point in x:
-            p = self.sigmoid(self.feedForward(point))
-            pred.append(np.average(p))
+        i = 0
+        for layer in self.layers:
+            x = layer.feedForward(x)
+            #print(str(i) + " " + str(x))
+            i += 1
+
+        if self.outputNumber == 1:
+            return x[0]
+
         #print(pred)
         #print(self.weight)
-        return pred
+        return x
 
-    def classificationPred(self, x):
-        pred = []
-        for point in x:
-            p = self.feedForward(point)
-            pred.append(np.argmax(p))
-        return pred
+    def setWeights(self, weightMatricies):
+        for i in range(len(self.layers)):
+            self.layers[i].weightMatrix = weightMatricies[i]
+"""
+    # Backpropagate error and store in neurons
+    def backward_propagate_error(self, expected):
+    	for i in reversed(range(len(self.layers))):
+    		layer = self.layers[i]
+    		errors = list()
+    		if i != len(network)-1:
+    			for j in range(len(layer)):
+    				error = 0.0
+    				for neuron in network[i + 1]:
+    					error += (neuron['weights'][j] * neuron['delta'])
+    				errors.append(error)
+    		else:
+    			for j in range(len(layer)):
+    				neuron = layer[j]
+    				errors.append(expected[j] - neuron['output'])
+    		for j in range(len(layer)):
+    			neuron = layer[j]
+    			neuron['delta'] = errors[j] * transfer_derivative(neuron['output'])
+
+    # Update network weights with error
+    def update_weights(network, row, l_rate):
+    	for i in range(len(network)):
+    		inputs = row[:-1]
+    		if i != 0:
+    			inputs = [neuron['output'] for neuron in network[i - 1]]
+    		for neuron in network[i]:
+    			for j in range(len(inputs)):
+    				neuron['weights'][j] += l_rate * neuron['delta'] * inputs[j]
+    			neuron['weights'][-1] += l_rate * neuron['delta']
+
+
     def MSE(self, pred, actual):
         return np.mean(np.square(actual - pred))
 
@@ -52,20 +118,8 @@ class FeedForwardNeuralNetwork:
             if pred[i]==true[i]:
                 truePositive+=1
         return truePositive/len(true)
-
-    def feedForward(self,x):
-        self.A = {}
-        self.H = {}
-        self.H[0] = x
-        for i in range(self.numberLayers):
-            self.A[i + 1] = np.matmul(self.H[i], self.weight[i + 1]) + self.bias[i + 1]
-            self.H[i + 1] = self.sigmoid(np.dot(self.H[i], self.weight[i + 1]) + self.bias[i + 1])
-        self.A[self.numberLayers + 1] = np.matmul(self.H[self.numberLayers], self.weight[self.numberLayers + 1]) + self.bias[self.numberLayers + 1]
-        self.H[self.numberLayers + 1] = self.sigmoid(self.A[self.numberLayers + 1])
-        return self.H[self.numberLayers + 1]
-
+        
     def backprop(self, x, y):
-        self.feedForward(x)
         self.dW = {}
         self.dB = {}
         self.dH = {}
@@ -89,7 +143,6 @@ class FeedForwardNeuralNetwork:
             # print()
             # print(self.bias)
             # print()
-"""
 tData = pre_processing.pre_processing("data/machine.data")
 trainData = dataset.dataset(tData.getData())
 original=np.array(trainData.getTrainingSet(0))

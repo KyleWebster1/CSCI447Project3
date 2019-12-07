@@ -10,27 +10,31 @@ class particle:
         self.state = state
         self.velocity = [0] * len(state)
         self.p_best = state
+        self.fp_best = 10000;
 
 class particle_swarm:
 
     def __init__(self, training_set, test_set, inertiaW, localW, globalW):
 
         self.training_set = training_set
+        self.training_set_features = training_set.copy()
+
         self.test_set = test_set
 
-        net = FFN.FeedForwardNeuralNetwork(len(training_set[0]) - 1, len(training_set[0]) - 1, [1])
+        net = FFN.FeedForwardNeuralNetwork(len(training_set[0]) - 1, 1, 1)
         self.net = net
-        
-        self.weightSize = net.sizes[1]
-        self.weightCount =  net.sizes[0]
-        self.layerCount = net.numberLayers
-        self.dimensions = self.weightSize * self.weightCount * self.layerCount
+
+        self.layerSize = len(training_set[0]) - 1
+        self.layers = net.layers
+
+        self.dimensions = (self.layerSize * self.layerSize * (len(self.layers)-1)) + self.layerSize
         print(self.dimensions)
+
         self.population = []
         for i in range(3 * self.dimensions):
             self.population.append(particle(numpy.random.randn(self.dimensions)))
 
-        self.g_best = [0] * self.dimensions
+        self.g_best = self.population[numpy.random.randint(0,len(self.population)-1)].state
         self.inertiaW = inertiaW
         self.localW = localW
         self.globalW = globalW
@@ -38,32 +42,40 @@ class particle_swarm:
     def train(self):
         iteration = 0
         while (iteration < 1000):
-            fg = self.try_weight(self.g_best)
+            fg = self.fitness(self.g_best)
             print("iteration: " + str(iteration) + ", gBest: " + str(fg))
             for p in self.population:
-                fx = self.try_weight(p.state)
-                fp = self.try_weight(p.p_best)
-                if (fx < fp):
+                fx = self.fitness(p.state)
+                if (fx <= p.fp_best):
                     p.p_best = p.state
+                    p.fp_best = fx
+                    print("!PB: " + str(fx))
                     if (fx < fg):
-                        self.g_best = newState
-                        fg = self.try_weight(g_best)
+                        self.g_best = p.state
+                        fg = fx
+                        print("!!!GB " + str(fx))
             for p in self.population:
                 p.velocity = self.find_velocity(p)
-                p.state = numpy.add(p, p.velocity)
+                p.state = numpy.add(p.state, p.velocity)
+            iteration += 1
 
     def find_velocity(self, particle):
-        return (inertiaW * particle.velocity) + (localW * particle.p_best) + (globalW * g_best)
+        x1 = numpy.multiply(self.inertiaW, particle.velocity)
+        x2 = numpy.multiply(self.localW, particle.p_best)
+        x3 = numpy.multiply(self.globalW, self.g_best)
+        return numpy.add(numpy.add(x1, x2), x3)
 
 
-    def try_weight(self, w):
+    def fitness(self, w):
 
-        self.net.weight = self.makeWeightMatrix(w)
+        self.net.setWeights(self.makeWeightMatrix(w))
 
         mse = 0
         for x in self.training_set:
-            print(*x)
-            mse += self.net.regressionPred(x)
+            y = x.copy()
+            del y[-1]
+            e = x[-1] - self.net.makePrediction(y)
+            mse += e * e
 
         mse /= len(self.training_set)
 
@@ -71,13 +83,19 @@ class particle_swarm:
 
     def makeWeightMatrix(self, w):
         matrix = []
-        for l in range(self.layerCount):
+        n = 0
+        for l in range(len(self.layers) -1):
             matrix.append([])
-            n = 0
-            for i in range(self.weightCount):
-                for j in range(self.weightSize):
-                    matrix[l].append(w[n])
+            for i in range(self.layerSize):
+                matrix[l].append([])
+                for j in range(self.layerSize):
+                    matrix[l][i].append(w[n])
                     n += 1
+        matrix.append([])
+        while(n < len(w)):
+            matrix[-1].append(w[n])
+            n += 1
+
         return matrix
 tData = pre_processing.pre_processing("data/forestfires.csv")
 trainData = dataset.dataset(tData.getData())
