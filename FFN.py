@@ -133,7 +133,7 @@ class FeedForwardNeuralNetwork:
             self.dA[k - 1] = np.multiply(self.dH[k - 1], self.sigmoid_deriv(self.H[k - 1]))
 
     def update(self, eda, x, y):
-        ffn.backprop(x, y)
+        self.backprop(x, y)
         m = x.shape[1]
         for i in range(self.numberLayers + 1):
             self.weight[i + 1] -= eda * (self.dW[i + 1] / m)
