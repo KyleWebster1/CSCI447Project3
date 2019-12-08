@@ -6,7 +6,7 @@
 import random
 import pre_processing
 import dataset
-import numpy as np
+import numpy
 
 
 class Layer:
@@ -18,11 +18,11 @@ class Layer:
 
     def feedForward(self, nodeInput):
 
-        v = np.matmul(nodeInput,self.weightMatrix)
+        v = numpy.matmul(nodeInput, self.weightMatrix)
         if self.isLast:
             v = [v]
 
-        v = sigmoid(v)
+        v = self.sigmoid(v)
         return v
 
     def backPropDelta(self, output, expected):
@@ -30,19 +30,19 @@ class Layer:
         matrix = numpy.transpose(self.weightMatrix)
         delta = []
         for i in range(len(matrix)):
-            delta.append(numpy.multiply(matrix[i],sigDeriv(output)))
+            delta.append(numpy.multiply(matrix[i], self.sigDeriv(output)))
 
         return numpy.transpose(delta)
 
     def sigmoid(self, input):
-        for i in range(len(v)):
-            v[i] = 1 / (1 + np.exp(-input[i]))
-        return v
+        for i in range(len(input)):
+            input[i] = 1 / (1 + numpy.exp(-input[i]))
+        return input
 
     def sigDeriv(self, output):
-        for i in range(len(v)):
-            v[i] = output[i] * (1 - output[i])
-        return v
+        for i in range(len(output)):
+            output[i] = output[i] * (1 - output[i])
+        return output
 
 
 
@@ -56,8 +56,8 @@ class FeedForwardNeuralNetwork:
         self.layers = []
 
         for i in range(self.numberLayers - 1):
-            self.layers.append(Layer(np.random.rand(inputs, inputs), False))
-        self.layers.append(Layer(np.random.rand(outputs,inputs), True))
+            self.layers.append(Layer(numpy.random.rand(inputs, inputs), False))
+        self.layers.append(Layer(numpy.random.rand(outputs,inputs), True))
 
     def makePrediction(self, x):
         #print(x)

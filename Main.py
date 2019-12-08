@@ -35,7 +35,7 @@ regression = ["data/forestfires.csv","data/machine.data","data/winequality-red.c
 #
 #     #acc *= 100
 #     print("Accuracy: " + str(acc))
-
+#
 # for n in range(len(classification)):
 #     print('=========================================\n' + classification[n] + '\n=========================================')
 #
