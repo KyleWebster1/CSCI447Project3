@@ -11,29 +11,58 @@ import numpy
 
 class Layer:
 
-    def __init__(self,weightMatrix, isLast):
+    def __init__(self,weightMatrix, isLastReg):
         self.weightMatrix = weightMatrix
-        self.isLast = isLast
-        self.layerOutput = []
+        self.isLastReg = isLastReg
+        self.nodeInput = []
+
 
     def feedForward(self, nodeInput):
 
-        v = numpy.matmul(nodeInput, self.weightMatrix)
-        if self.isLast:
+        self.nodeInput = nodeInput
+        v = self.getLayerOutput()
+        if self.isLastReg:
             v = [v]
 
         v = self.sigmoid(v)
+
         return v
 
-    def backPropDelta(self, output, expected):
+    def getNodeOutput(self, k):
+        return numpy.multiply(self.nodeInput[k], numpy.transpose(self.weightMatrix)[k])
 
-        matrix = numpy.transpose(self.weightMatrix)
+    def getLayerOutput(self):
+        return numpy.matmul(self.nodeInput, self.weightMatrix)
+
+    def findWeightDelta(self, delta):
+        weight_delta = []
+        for i in range(len(self.nodeInput)):
+            weight_delta.append([])
+            for j in range(len(delta)):
+                weight_delta[i].append(self.nodeInput[i] * delta[j])
+
+        return weight_delta
+
+    def findOutputDelta(self,target):
+        o = self.getLayerOutput()
         delta = []
-        for i in range(len(matrix)):
-            delta.append(numpy.multiply(matrix[i], self.sigDeriv(output)))
+        for j in range(len(o)):
+            delta.append(-(target[j] - o[j]) * o[j] * (1-o[j]))
 
-        return numpy.transpose(delta)
+        return delta
 
+    def findHiddenDelta(self, downstream, kdelta):
+        o = self.getLayerOutput()
+        delta = []
+        for j in range(len(o)):
+            sum = 0
+            for k in range(len(kdelta)):
+                
+                sum += kdelta[k] * downstream.weightMatrix[j][k]
+            print(sum)
+            delta.append(o[j]*(1-o[j]) * sum)
+
+        return delta
     def sigmoid(self, input):
         for i in range(len(input)):
             input[i] = 1 / (1 + numpy.exp(-input[i]))
@@ -52,31 +81,120 @@ class FeedForwardNeuralNetwork:
         self.input = inputs
         self.outputNumber = outputs
         self.numberLayers = hiddenLayers + 1
-
         self.layers = []
 
+        self.initWeights()
+
+    def initWeights(self):
+        self.layers = [0] * self.numberLayers
         for i in range(self.numberLayers - 1):
-            self.layers.append(Layer(numpy.random.rand(inputs, inputs), False))
-        self.layers.append(Layer(numpy.random.rand(outputs,inputs), True))
+            self.layers[i] = Layer(numpy.random.rand(self.input, self.input), False)
+        self.layers[-1] = Layer(numpy.random.rand(self.input, self.outputNumber), self.outputNumber == 1)
+        
+    def run(self, trainData, learningRate):
+        for i in range(10):
+            self.train(trainData.getTrainingSet(i), learningRate)
+            performance = self.test(trainData.getTestSet(i))
+            if self.outputNumber == 1:
+                print("K: " + str(i) + "MSE: " + str(performance))
+            else:
+                print("K: " + str(i) + "ACC: " + str(performance))
+            
+            
+    def train(self, training_set, learningRate):
+        change = 10000
+        while change > .0001:
+            x = random.choice(training_set)
+            y = x[:-1]
+            pred = self.makePrediction(y)
+            if (self.outputNumber == 1):
+                d = [pred]
+            else:
+                d = pred.copy()
+                for i in range(len(d)):
+                    if i == x[-1]:
+                        d[i] = 1
+                    else:
+                        d[i] = 0
+                
+            change = self.backProp(d, learningRate)
+            #print(change)
+
+
+    def test(self, test_set):
+        mse = 0
+        acc = 0
+        for x in test_set:
+            y = x[:-1]
+            pred = self.makePrediction(y)
+            if self.outputNumber == 1:
+                mse += pow(x[-1] - pred, 2)
+            else:
+                acc += self.getAcc(pred, x[-1])
+
+        if self.outputNumber == 1:
+            mse /= len(test_set)
+            return mse
+        else:
+            acc /= len(test_set)
+            return acc
 
     def makePrediction(self, x):
-        #print(x)
-        i = 0
+        
         for layer in self.layers:
             x = layer.feedForward(x)
-            #print(str(i) + " " + str(x))
-            i += 1
 
         if self.outputNumber == 1:
             return x[0]
-
-        #print(pred)
-        #print(self.weight)
         return x
 
-    def setWeights(self, weightMatricies):
-        for i in range(len(self.layers)):
-            self.layers[i].weightMatrix = weightMatricies[i]
+    def update_weights(self, layer, delta, learningRate):
+        weight_change = layer.findWeightDelta(delta)
+        weight_change = numpy.multiply(-learningRate, weight_change)
+        layer.weightMatrix = numpy.add(layer.weightMatrix, weight_change)
+
+    def backProp(self, expected, learningRate):
+
+        totalDelta = []
+        delta = self.layers[-1].findOutputDelta(expected)
+        totalDelta.append(delta)
+        downstream = self.layers[-1]
+        i = 0
+        for layer in reversed(self.layers[:-1]):
+            print(i)
+            i += 1
+            delta = layer.findHiddenDelta(downstream, delta)
+            totalDelta.append(delta)
+            downstream = layer
+            
+        i = 0
+        for layer in reversed(self.layers):
+            self.update_weights(layer, totalDelta[i], learningRate)
+            i += 1
+
+        change = 0
+        for j in totalDelta[0]:
+            change += abs(j)
+
+        return change
+
+    def getAcc(self, o, d):
+        high = 0
+        index = 0
+        for i in range(len(o)):
+            if o[i] > high:
+                high = o[i]
+                index = i
+        if i == d:
+            return 1
+        else:
+            return 0
+
+tData = pre_processing.pre_processing("data/car.data")
+trainData = dataset.dataset(tData.getData())
+net = FeedForwardNeuralNetwork(6, 7, 1)
+net.run(trainData, .001)
+
 """
     # Backpropagate error and store in neurons
     def backward_propagate_error(self, expected):
@@ -118,7 +236,7 @@ class FeedForwardNeuralNetwork:
             if pred[i]==true[i]:
                 truePositive+=1
         return truePositive/len(true)
-        
+
     def backprop(self, x, y):
         self.dW = {}
         self.dB = {}

@@ -21,7 +21,7 @@ class particle_swarm:
 
         self.test_set = test_set
 
-        net = FFN.FeedForwardNeuralNetwork(len(training_set[0]) - 1, 1, 1)
+        net = FFN.FeedForwardNeuralNetwork(len(training_set[0]) - 1, 1, 2)
         self.net = net
 
         self.layerSize = len(training_set[0]) - 1
@@ -49,7 +49,6 @@ class particle_swarm:
                 if (fx <= p.fp_best):
                     p.p_best = p.state
                     p.fp_best = fx
-                    print("!PB: " + str(fx))
                     if (fx < fg):
                         self.g_best = p.state
                         fg = fx
@@ -61,8 +60,8 @@ class particle_swarm:
 
     def find_velocity(self, particle):
         x1 = numpy.multiply(self.inertiaW, particle.velocity)
-        x2 = numpy.multiply(self.localW, particle.p_best)
-        x3 = numpy.multiply(self.globalW, self.g_best)
+        x2 = numpy.multiply(numpy.random.uniform(0,self.localW, len(particle.state)), numpy.subtract(particle.p_best, particle.state))
+        x3 = numpy.multiply(numpy.random.uniform(0,self.globhalW, len(particle.state)), numpy.subtract(self.g_best, particle.state))
         return numpy.add(numpy.add(x1, x2), x3)
 
 
@@ -99,5 +98,5 @@ class particle_swarm:
         return matrix
 tData = pre_processing.pre_processing("data/forestfires.csv")
 trainData = dataset.dataset(tData.getData())
-swarm = particle_swarm(trainData.getTrainingSet(0), trainData.getTestSet(0), .1, .4, .5)
+swarm = particle_swarm(trainData.getTrainingSet(0), trainData.getTestSet(0), .8, .4, .5)
 swarm.train()
