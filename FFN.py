@@ -1,4 +1,4 @@
-# Feed Forward Network Implementation Project
+# Feed Forward Network Implementation
 # Alexander Alvarez
 # Matt Wintersteen
 # Kyle Webster
@@ -16,7 +16,7 @@ class Layer:
         self.isLastReg = isLastReg
         self.nodeInput = []
 
-
+    #takes input to layer, returns sigmoid of next layer
     def feedForward(self, nodeInput):
 
         self.nodeInput = nodeInput
@@ -28,46 +28,35 @@ class Layer:
 
         return v
 
+    #returns output array for given node
     def getNodeOutput(self, k):
-        return numpy.multiply(self.nodeInput[k], numpy.transpose(self.weightMatrix)[k])
+        return numpy.multiply(self.nodeInput[k], self.weightMatrix[k])
 
+    #returns the output array for layer
     def getLayerOutput(self):
         return numpy.matmul(self.nodeInput, self.weightMatrix)
 
-    def findWeightDelta(self, delta):
-        weight_delta = []
-        for i in range(len(self.nodeInput)):
-            weight_delta.append([])
-            for j in range(len(delta)):
-                weight_delta[i].append(self.nodeInput[i] * delta[j])
+    #finds the delta for an output layer
+    def findOutputChange(self, delta):
 
-        return weight_delta
+        change = numpy.multiply(delta, self.nodeInput)
+        return change
 
-    def findOutputDelta(self,target):
-        o = self.getLayerOutput()
-        delta = []
-        for j in range(len(o)):
-            delta.append(-(target[j] - o[j]) * o[j] * (1-o[j]))
+    #finds the delta for a hidden layer
+    def findHiddenChange(self, delta, downstream):
 
-        return delta
+        change = numpy.multiply(delta, self.nodeInput)
+        change = numpy.matmul(change, downstream.weightMatrix)
 
-    def findHiddenDelta(self, downstream, kdelta):
-        o = self.getLayerOutput()
-        delta = []
-        for j in range(len(o)):
-            sum = 0
-            for k in range(len(kdelta)):
-                
-                sum += kdelta[k] * downstream.weightMatrix[j][k]
-            print(sum)
-            delta.append(o[j]*(1-o[j]) * sum)
+        return change
 
-        return delta
+    #finds the sigmoid of each element of the array
     def sigmoid(self, input):
         for i in range(len(input)):
             input[i] = 1 / (1 + numpy.exp(-input[i]))
         return input
 
+    #finds the sigmoid derivative of each element of the array
     def sigDeriv(self, output):
         for i in range(len(output)):
             output[i] = output[i] * (1 - output[i])
@@ -76,7 +65,7 @@ class Layer:
 
 
 class FeedForwardNeuralNetwork:
-    #Inspired from code from hackermoon.com blogpost by Niranjan Kumar
+
     def __init__(self, inputs, outputs, hiddenLayers):
         self.input = inputs
         self.outputNumber = outputs
@@ -85,30 +74,40 @@ class FeedForwardNeuralNetwork:
 
         self.initWeights()
 
+    #initializes weights
     def initWeights(self):
         self.layers = [0] * self.numberLayers
         for i in range(self.numberLayers - 1):
-            self.layers[i] = Layer(numpy.random.rand(self.input, self.input), False)
-        self.layers[-1] = Layer(numpy.random.rand(self.input, self.outputNumber), self.outputNumber == 1)
-        
+            self.layers[i] = Layer(numpy.multiply(.01,numpy.random.standard_normal(size = (self.input,self.input))), False)
+        self.layers[-1] = Layer(numpy.multiply(.01,numpy.random.standard_normal(size = (self.input,self.outputNumber))), self.outputNumber == 1)
+
+    #instantly set all weights in network. Matrix is [layer][node][weight]. 
+    def setWeights(self, weightMatrix):
+        i = 0
+        for matrix in weightMatrix:
+            self.layers[i].weightMatrix = matrix
+            i += 1
+
+    #runs train/test for a set of train/test sets
     def run(self, trainData, learningRate):
         for i in range(10):
-            self.train(trainData.getTrainingSet(i), learningRate)
+            self.train(trainData.getTrainingSet(i), trainData.getTestSet(i), learningRate)
             performance = self.test(trainData.getTestSet(i))
             if self.outputNumber == 1:
-                print("K: " + str(i) + "MSE: " + str(performance))
+                print("K: " + str(i) + " MSE: " + str(performance))
             else:
-                print("K: " + str(i) + "ACC: " + str(performance))
-            
-            
-    def train(self, training_set, learningRate):
-        change = 10000
-        while change > .0001:
+                print("K: " + str(i) + " ACC: " + str(performance))
+
+    #trains the net
+    def train(self, training_set, test_set, learningRate):
+        change = [1,1,1,1]
+        u = 0
+        while numpy.sum(change) > .001:
             x = random.choice(training_set)
             y = x[:-1]
             pred = self.makePrediction(y)
             if (self.outputNumber == 1):
-                d = [pred]
+                d = [x[-1]]
             else:
                 d = pred.copy()
                 for i in range(len(d)):
@@ -116,21 +115,27 @@ class FeedForwardNeuralNetwork:
                         d[i] = 1
                     else:
                         d[i] = 0
-                
-            change = self.backProp(d, learningRate)
-            #print(change)
+            del change[0]
+            change.append(self.backProp(d, learningRate))
+            print(numpy.sum(change))
+            u += 1
+            if u == 10:
+                u = 0
+                self.test(test_set)
+            
 
-
-    def test(self, test_set):
+    #tests the net over given test set and array of possible class values (from dataset)
+    def test(self, test_set, classes):
         mse = 0
         acc = 0
+
         for x in test_set:
             y = x[:-1]
             pred = self.makePrediction(y)
             if self.outputNumber == 1:
-                mse += pow(x[-1] - pred, 2)
+                mse += pow(x[-1] - pred[0], 2)
             else:
-                acc += self.getAcc(pred, x[-1])
+                acc += self.getAcc(pred, x[-1], classes)
 
         if self.outputNumber == 1:
             mse /= len(test_set)
@@ -139,191 +144,56 @@ class FeedForwardNeuralNetwork:
             acc /= len(test_set)
             return acc
 
+    #makes prediction for given input
     def makePrediction(self, x):
-        
+
         for layer in self.layers:
-            x = layer.feedForward(x)
+            x = layer.feedForward(x)\
 
         if self.outputNumber == 1:
             return x[0]
         return x
 
-    def update_weights(self, layer, delta, learningRate):
-        weight_change = layer.findWeightDelta(delta)
-        weight_change = numpy.multiply(-learningRate, weight_change)
-        layer.weightMatrix = numpy.add(layer.weightMatrix, weight_change)
-
+    #backpropagates the error of the network
     def backProp(self, expected, learningRate):
 
-        totalDelta = []
-        delta = self.layers[-1].findOutputDelta(expected)
-        totalDelta.append(delta)
+        changeMatrix = []
+        delta = numpy.subtract(self.layers[-1].getLayerOutput(), expected)
+        delta = numpy.multiply(learningRate, delta)
+        changeMatrix.append(self.layers[-1].findOutputChange(delta))
         downstream = self.layers[-1]
-        i = 0
         for layer in reversed(self.layers[:-1]):
-            print(i)
-            i += 1
-            delta = layer.findHiddenDelta(downstream, delta)
-            totalDelta.append(delta)
+            changeMatrix.append(layer.findHiddenChange(delta, downstream))
             downstream = layer
-            
+
         i = 0
         for layer in reversed(self.layers):
-            self.update_weights(layer, totalDelta[i], learningRate)
+            layer.weightMatrix = numpy.subtract(layer.weightMatrix,changeMatrix[i])
             i += 1
 
         change = 0
-        for j in totalDelta[0]:
-            change += abs(j)
+        for i in changeMatrix[0]:
+            change += abs(i)
 
         return change
 
-    def getAcc(self, o, d):
+    #checks whether the output predicts the desired class
+    def getAcc(self, o, d, classes):
         high = 0
         index = 0
         for i in range(len(o)):
             if o[i] > high:
                 high = o[i]
                 index = i
-        if i == d:
+        #print("!p: " + str(index))
+        #print("!!d: " + str(d))
+        if index == classes.index(d):
             return 1
         else:
             return 0
 
-tData = pre_processing.pre_processing("data/car.data")
-trainData = dataset.dataset(tData.getData())
-net = FeedForwardNeuralNetwork(6, 7, 1)
-net.run(trainData, .001)
 
-"""
-    # Backpropagate error and store in neurons
-    def backward_propagate_error(self, expected):
-    	for i in reversed(range(len(self.layers))):
-    		layer = self.layers[i]
-    		errors = list()
-    		if i != len(network)-1:
-    			for j in range(len(layer)):
-    				error = 0.0
-    				for neuron in network[i + 1]:
-    					error += (neuron['weights'][j] * neuron['delta'])
-    				errors.append(error)
-    		else:
-    			for j in range(len(layer)):
-    				neuron = layer[j]
-    				errors.append(expected[j] - neuron['output'])
-    		for j in range(len(layer)):
-    			neuron = layer[j]
-    			neuron['delta'] = errors[j] * transfer_derivative(neuron['output'])
-
-    # Update network weights with error
-    def update_weights(network, row, l_rate):
-    	for i in range(len(network)):
-    		inputs = row[:-1]
-    		if i != 0:
-    			inputs = [neuron['output'] for neuron in network[i - 1]]
-    		for neuron in network[i]:
-    			for j in range(len(inputs)):
-    				neuron['weights'][j] += l_rate * neuron['delta'] * inputs[j]
-    			neuron['weights'][-1] += l_rate * neuron['delta']
-
-
-    def MSE(self, pred, actual):
-        return np.mean(np.square(actual - pred))
-
-    def accuracy(self,true, pred):
-        truePositive = 0
-        for i in range(len(true)):
-            if pred[i]==true[i]:
-                truePositive+=1
-        return truePositive/len(true)
-
-    def backprop(self, x, y):
-        self.dW = {}
-        self.dB = {}
-        self.dH = {}
-        self.dA = {}
-        L = self.numberLayers + 1
-        self.dA[L] = (self.H[L]- y[:,None])
-        for k in range(L, 0, -1):
-            self.dW[k] = np.matmul(self.H[k - 1].T, self.dA[k])
-            self.dB[k] = self.dA[k]
-            self.dH[k - 1] = np.matmul(self.dA[k], self.weight[k].T)
-            self.dA[k - 1] = np.multiply(self.dH[k - 1], self.sigmoid_deriv(self.H[k - 1]))
-
-    def update(self, eda, x, y):
-        self.backprop(x, y)
-        m = x.shape[1]
-        for i in range(self.numberLayers + 1):
-            self.weight[i + 1] -= eda * (self.dW[i + 1] / m)
-            temp = eda * (self.dB[i + 1] / m)
-            self.bias[i + 1] -= temp[i]
-            # print(self.weight)
-            # print()
-            # print(self.bias)
-            # print()
-tData = pre_processing.pre_processing("data/machine.data")
-trainData = dataset.dataset(tData.getData())
-original=np.array(trainData.getTrainingSet(0))
-test = np.array(trainData.getTestSet(0))
-x = original[:,:-1]
-y = original[:,-1]
-xsize = x.shape #6 is input nodes Last column is correct_answer
-ysize = np.unique(y).shape
-#Simple test case. AND gate
-#x = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-#y = np.array([[0], [1], [1], [1]])
-ffn = FeedForwardNeuralNetwork(xsize[1], ysize[0], [xsize[1]]*2)
-#print(ffn.feedForward(x))
-#print(ffn.weight)
-
-for i in range (2000):
-    ffn.update(.1, x, y)
-#print(ffn.weight)
-
-
-#print(y)
-#clas = ffn.classificationPred(x)
-#print(clas)
-reg = ffn.regressionPred(x)
-print(ffn.MSE(y, reg))
-#print(ffn.accuracy(y, clas))
-
-tData = pre_processing.pre_processing("data/segmentation.data")
-trainData = dataset.dataset(tData.getData())
-original=np.array(trainData.getTrainingSet(0))
-test = np.array(trainData.getTestSet(0))
-x = original[:,:-1]
-y = original[:,-1]
-xsize = x.shape #6 is input nodes Last column is correct_answer
-ysize = np.unique(y).shape
-#Simple test case. AND gate
-#x = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-#y = np.array([[0], [1], [1], [1]])
-ffn = FeedForwardNeuralNetwork(xsize[1], ysize[0], [xsize[1]]*2)
-#print(ffn.feedForward(x))
-#print(ffn.weight)
-
-for i in range (2000):
-    ffn.update(.1, x, y)
-#print(ffn.weight)
-
-
-#print(y)
-clas = ffn.classificationPred(x)
-#reg = ffn.regressionPred(x)
-#print(reg)
-#print(ffn.MSE(y, reg))
-print(ffn.accuracy(y, clas))
-
-
-
-ffn.add(Layer(size[1], size[1]))
-ffn.add(Layer(size[1], size[1]))
-#ffn.add(Layer(4, 4))
-#ffn.add(Layer(4, 4))
-ffn.add(Layer(size[1], 6))
-
-ffn.train(x,y,0.01,2000)
-print('Accuracy: %.2f%%' % (ffn.accuracy(ffn.final_pass(x), y.flatten()) * 100))
-#print(ffn.accuracy(final_x,y))
-"""
+#tData = pre_processing.pre_processing("data/machine.data")
+#trainData = dataset.dataset(tData.getData())
+#net = FeedForwardNeuralNetwork(9, 1, 1)
+#net.run(trainData, .01)
