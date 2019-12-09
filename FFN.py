@@ -135,7 +135,10 @@ class FeedForwardNeuralNetwork:
             if self.outputNumber == 1:
                 mse += pow(x[-1] - pred[0], 2)
             else:
-                acc += self.getAcc(pred, x[-1], classes)
+                try:
+                    acc += self.getAcc(pred, x[-1], classes)
+                except:
+                    acc += 0
 
         if self.outputNumber == 1:
             mse /= len(test_set)
