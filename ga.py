@@ -13,60 +13,79 @@ class GA:
 
         #Create neural net to be trained
         if (isRegression):
-            self.net = FFN.FeedForwardNeuralNetwork(len(dataset.training_set[0][0]) - 1, 2, dataset.getNumClasses())
-        else:
             self.net = FFN.FeedForwardNeuralNetwork(len(dataset.training_set[0][0]) - 1, 2, 1)
+        else:
+            self.net = FFN.FeedForwardNeuralNetwork(len(dataset.training_set[0][0]) - 1, 2, dataset.getNumClasses())
 
-        t = 0
-    
-        #init population
+        #initialize population
+        self.population = []
+        self.popSize = 3
+        self.initPop()
+
+        
+        self.t = 0
+    def initPop(self):
+        self.population = []
+        #Record info about weights so recombining is easy
+        self.num_layers = 0
+        self.weight_len = []
         pop = []
         data = []
+        for layer in self.net.layers:
+            self.num_layers += 1
+            newWeightLen = []
+            for weight in layer.weightMatrix:
+                newWeightLen.append(len(weight))
+                for w in weight:
+                    data.append(w)
+            self.weight_len.append(newWeightLen)
 
-        for i in range(50):
-            data.append([random.randint(-3, 3),random.randint(-3, 3),random.randint(-3, 3),random.randint(-3, 3)])
         
         pop.append(data)
-
-        #init fitness
-        fit = []
-        fit.append(self.evalFit(pop[t]))
-
-        while(self.evalFit(pop[t]) > .05):
-            t += 1
-            c = self.select(pop[t-1])
-            cp = self.recombine(c)
-            cpp = self.mutate(cp)
-            newpop = self.replace(cpp,pop[t-1])
-            pop.append(newpop)
-            fit.append(self.evalFit(pop[t]))
-
-
-        print(pop[t])
-        print(fit[t])
-        print("# of iterations: ",t)
-        print("# of unique indiv from pop: ",len(self.unique(pop[t])))
-        pop[t] = self.sort(pop[t])
-        print(pop[t][:1])
-        print("//////////")        
-
-
         
-    def evalFit(self,chrm):
-        ideal = [4,4,4,4]
-
+        
+        dataLen = len(data)
+        #generate more random weights
+        for i in range(self.popSize):
+            newData = []
+            for j in range(dataLen):
+                newData.append(random.gauss(0, .01))
+            pop.append(newData)
+        self.population.append(pop)
+        
+    def evalFit(self,chrm,test_set):
         meanOfMeans = 0
 
         for i in range(len(chrm)):
-            meanOfMeans += self.evalSingleFit(chrm[i])
+            meanOfMeans += self.evalSingleFit(chrm[i],test_set)
         return meanOfMeans/(len(chrm))
 
-    def evalSingleFit(self,chrm):
-        ideal = [4,4,4,4]
-        mean = 0
-        for i in range(len(chrm)):
-            mean += abs(chrm[i]-ideal[i])
-        return mean/len(chrm)
+    def evalSingleFit(self,chrm,test_set):
+        
+        self.net.setWeights(self.makeWeightMatrix(chrm))
+
+        f = self.net.test(test_set, self.dataset.classes)
+        
+        return f
+
+    #create weight matrix out of a vector
+    def makeWeightMatrix(self, w):
+        matrix = []
+        n = 0
+        #for each layer
+        for layer in range(len(self.net.layers)):
+            matrix.append([])
+            #for each node in the layer
+            for node in range(len(self.net.layers[layer].weightMatrix)):
+                #for each weight in the layer
+                matrix[layer].append([])
+                for weight in range(len(self.net.layers[layer].weightMatrix[node])):
+                    #assign weight as value under pointer
+                    matrix[layer][node].append(w[n])
+                    #increment pointer
+                    n += 1
+        return matrix
+            
 
     def sort(self,chrm):
         s = chrm
@@ -74,11 +93,12 @@ class GA:
         for i in range(len(s)):
             for j in range(len(s)-i):
                 if j+1 < len(s):
-                    if self.evalSingleFit(s[j]) > self.evalSingleFit(s[j+1]):
-                        #swap
-                        temp = s[j]
-                        s[j] = s[j+1]
-                        s[j+1] = temp
+                    for k in range(len(self.dataset.test_set)):
+                        if self.evalSingleFit(s[j],self.dataset.test_set[k]) > self.evalSingleFit(s[j+1],self.dataset.test_set[k]):
+                            #swap
+                            temp = s[j]
+                            s[j] = s[j+1]
+                            s[j+1] = temp
         return s
 
     #select finds parents that will be used to make the next gen
@@ -90,7 +110,7 @@ class GA:
         select = []
         for i in range(selectNum):
             select.append(sortedChrm[i])
-                    
+
         return select
 
     def unique(self, p): 
@@ -103,27 +123,16 @@ class GA:
                 
         return unique_p
 
-    def uniformCrossover(self, chrm):
+    def singleCrossover(self,chrm):
         newChrm = []
-        #crossover each bit randomly
+        #choose place to crossover
         for i in range(len(chrm)):
-            for k in range(len(chrm)):
-                p1 = chrm[i]
-                p2 = chrm[k]
-                for x in range(len(p1)):
-                    if bool(random.getrandbits(1)) and p1[x] != p2[x]:
-                        temp = p1[x]
-                        p1[x] = p2[x]
-                        p2[x] = temp
-
-                        newChrm.append(p1)
-                        newChrm.append(p2)
+            for k in range(i+1,len(chrm)):
                 
+                pt = random.randint(1, len(chrm[i]))
 
-                chrm[i] = p1
-                chrm[k] = p2
-        newChrm = unique(newChrm)
-
+                newChrm.append(chrm[i][:pt]+chrm[k][pt:])
+        newChrm = self.unique(newChrm)
         return newChrm
 
     #recombine uses the parents to make new children
@@ -152,32 +161,32 @@ class GA:
         for c in children:
             newpop.append(c)
 
-        newpop = sort(newpop)
+        newpop = self.sort(newpop)
 
-        return newpop[:50]
+        return newpop[:self.popSize]
+    def run(self):
+        fit = []
+        for i in range(len(self.dataset.test_set)):
+            fit.append(self.evalFit(self.population[self.t], self.dataset.test_set[i]))
 
-def main():
-    layerData = []
-    layerWeightData = []
-    weightData = []
-    
-    for layer in ffn.weight:
-        layerData.append(len(ffn.weight[layer]))
-        for lw in range(len(ffn.weight[layer])):
-            layerWeightData.append(len(ffn.weight[layer][lw]))
-            for w in ffn.weight[layer][lw]:
-                weightData.append(w)
-
-    for i in range (2000):
-        ffn.update(.1, x, y)
-
-    reg = ffn.regressionPred(x)
-    print(reg)
-    print(y)
-    print(ffn.MSE(y, reg))
+            self.t += 1
+            c = self.select(self.population[self.t-1])
+            cp = self.recombine(c)
+            cpp = self.mutate(cp)
+            newpop = self.replace(cpp,self.population[self.t-1])
+            self.population.append(newpop)
+            fit.append(self.evalFit(self.population[self.t], self.dataset.test_set[i]))
+        
+        if self.net.outputNumber == 1:
+            print ("TOTAL MSE: " + str(fit[self.t]))
+        else:
+            print ("TOTAL ACC: " + str(fit[self.t]/len(self.dataset.test_set)))
+            print("# of iterations: ",self.t)
+            print("# of unique indiv from pop: ",len(self.population[self.t]))
+            print("//////////")
 
 classification = ["data/car.data","data/segmentation.data","data/abalone.data"]
-regression = ["data/forestfires.csv","data/machine.data","data/winequality-red.csv","data/winequality-white.csv"]
+regression = ["data/machine.data","data/forestfires.csv","data/winequality-red.csv","data/winequality-white.csv"]
 
 for file in classification:
     tData = pre_processing.pre_processing(file)
@@ -192,3 +201,7 @@ for file in regression:
     trainData = dataset.dataset(tData.getData())
     ga = GA(trainData, True)
     ga.run()
+
+
+
+
