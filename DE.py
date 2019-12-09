@@ -5,9 +5,9 @@ import numpy as np
 import random
 
 class differentialEvolutionL:
-    def __init__(self, trainingSet, testSet, mutation, crossOver, net, maxIter, populationSize):
+    def __init__(self, trainingSet, mutation, crossOver, net, maxIter, populationSize):
         self.trainingSet = trainingSet
-        self.testSet = testSet
+        self.training = random.choices(self.trainingSet, k = (int(len(trainingSet)*.1)))
         self.mutation = mutation
         self.crossOver = crossOver
         self.layerSize = len(trainingSet[0]) - 1
@@ -28,10 +28,10 @@ class differentialEvolutionL:
 
     def fixBounds(self, vector):
         for i in range(len(vector)):
-            if vector[i] < self.bounds[i][0]:
-                vector[i] = self.bounds[i][0]
-            elif vector[i] > self.bounds[i][1]:
-                vector[i] = self.bounds[i][0]
+            if vector[i] < self.bounds[i%len(self.trainingSet[0])][0]:
+                vector[i] = self.bounds[i%len(self.trainingSet[0])][0]
+            elif vector[i] > self.bounds[i%len(self.trainingSet[0])][1]:
+                vector[i] = self.bounds[i%len(self.trainingSet[0])][0]
         return vector
 
     @property
@@ -39,11 +39,14 @@ class differentialEvolutionL:
         bestInd = []
 
         population = []
+        dimensions = 0
+        #Adjusts length of vectors based on number of layers
+        for layer in self.net.layers:
+            dimensions += layer.weightMatrix.size
+        #initialize population
         for i in range(self.populationSize):
-            individual = []
-            for j in range(self.layerSize):
-                individual.append(random.uniform(self.bounds[j][0], self.bounds[j][1]))
-            population.append(individual)
+            r = np.random.randn(dimensions)
+            population.append(r)
 
         for i in range(self.maxIter):
             generationScores = []
@@ -59,7 +62,7 @@ class differentialEvolutionL:
                 #Mutation
                 trial = []
                 for k in range(len(x1)):
-                    trial.append(x1[k]-self.mutation*x2[k]-x3[k])
+                    trial.append(x1[k]+self.mutation*(x2[k]-x3[k]))
                 trial = self.fixBounds(trial)
                 offspring = []
                 #Crossover
@@ -70,8 +73,8 @@ class differentialEvolutionL:
                     else:
                         offspring.append(trial[k])
                 #Selection
-                strial = self.fitness(offspring)
-                starget = self.fitness(target)
+                strial = self.fitness(offspring, self.training)
+                starget = self.fitness(target, self.training)
                 if strial < starget:
                     population[j] = trial
                     generationScores.append(strial)
@@ -84,40 +87,35 @@ class differentialEvolutionL:
     def makeWeightMatrix(self, w):
         matrix = []
         n = 0
-        for l in range(len(self.layers) -1):
+        # for each layer
+        for layer in range(len(self.net.layers)):
             matrix.append([])
-            for i in range(self.layerSize):
-                matrix[l].append([])
-                for j in range(self.layerSize):
-                    matrix[l][i].append(w[n])
-                    n += 1
-                n = 0
-        matrix.append([])
-        while(n < len(w)):
-            matrix[-1].append(w[n])
-            n += 1
 
+            # for each node in the layer
+            for node in range(len(self.net.layers[layer].weightMatrix)):
+                # for each weight in the layer
+                matrix[layer].append([])
+                for weight in range(len(self.net.layers[layer].weightMatrix[node])):
+                    # assign weight as value under pointer
+                    matrix[layer][node].append(w[n])
+                    # increment pointer
+                    n += 1
         return matrix
 
-    def fitness(self, w):
+    def fitness(self, w, test_set):
 
+        # set weights to the weight matrix of the state
         self.net.setWeights(self.makeWeightMatrix(w))
 
-        mse = 0
-        for x in self.trainingSet:
-            y = x.copy()
-            del y[-1]
-            e = x[-1] - self.net.makePrediction(y)
-            mse += e * e
+        # test the current net (with updated matricies) on the test set
+        f = self.net.test(test_set, self.trainingSet.classes)
 
-        mse /= len(self.trainingSet)
-
-        return mse
+        return f
 
 tData = pre_processing.pre_processing("data/car.data")
 trainData = dataset.dataset(tData.getData())
-net = FFN.FeedForwardNeuralNetwork(len(trainData.getTrainingSet(0)) - 1, trainData.getNumClasses(), 2)
-newWeights = differentialEvolutionL(trainData.getTrainingSet(0), trainData.getTestSet(0), .2, .76, net, 25, 20)
+net = FFN.FeedForwardNeuralNetwork(len(trainData.getTrainingSet(0)[0]) - 1, trainData.getNumClasses(), 2)
+newWeights = differentialEvolutionL(trainData.getTrainingSet(0), .2, .76, net, 25, 20)
 print(newWeights.train)
 net.setWeights(newWeights.makeWeightMatrix(newWeights.train))
 for i in trainData.getTestSet(0):
