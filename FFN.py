@@ -81,7 +81,7 @@ class FeedForwardNeuralNetwork:
             self.layers[i] = Layer(numpy.multiply(.01,numpy.random.standard_normal(size = (self.input,self.input))), False)
         self.layers[-1] = Layer(numpy.multiply(.01,numpy.random.standard_normal(size = (self.input,self.outputNumber))), self.outputNumber == 1)
 
-    #instantly set all weights in network
+    #instantly set all weights in network. Matrix is [layer][node][weight]. 
     def setWeights(self, weightMatrix):
         i = 0
         for matrix in weightMatrix:
@@ -124,7 +124,7 @@ class FeedForwardNeuralNetwork:
                 self.test(test_set)
             
 
-    #tests the net
+    #tests the net over given test set and array of possible class values (from dataset)
     def test(self, test_set, classes):
         mse = 0
         acc = 0
@@ -132,7 +132,6 @@ class FeedForwardNeuralNetwork:
         for x in test_set:
             y = x[:-1]
             pred = self.makePrediction(y)
-            #print("PREDICTION: " + str (pred))
             if self.outputNumber == 1:
                 mse += pow(x[-1] - pred[0], 2)
             else:
