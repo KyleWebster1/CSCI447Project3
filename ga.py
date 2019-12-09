@@ -19,7 +19,7 @@ class GA:
 
         #initialize population
         self.population = []
-        self.popSize = 3
+        self.popSize = 10
         self.initPop()
 
         
@@ -149,13 +149,14 @@ class GA:
         for i in range(len(newChrm)):
             temp = newChrm[i]
             for j in range(len(temp)):
-                creep = random.gauss(0,0.01)
-                temp[j] = round(temp[j] + creep,3)
+                creep = random.gauss(0,0.1)
+                temp[j] = temp[j] + creep
             
             newChrm[i] = temp
         return newChrm
 
     def replace(self,children,parents):
+        '''
         newpop = parents
 
         for c in children:
@@ -164,43 +165,50 @@ class GA:
         newpop = self.sort(newpop)
 
         return newpop[:self.popSize]
-    def run(self):
+        '''
+        return children
+    def run(self,isRegression):
         fit = []
         for i in range(len(self.dataset.test_set)):
             fit.append(self.evalFit(self.population[self.t], self.dataset.test_set[i]))
 
-            self.t += 1
-            c = self.select(self.population[self.t-1])
-            cp = self.recombine(c)
-            cpp = self.mutate(cp)
-            newpop = self.replace(cpp,self.population[self.t-1])
-            self.population.append(newpop)
-            fit.append(self.evalFit(self.population[self.t], self.dataset.test_set[i]))
-        
-        if self.net.outputNumber == 1:
+            for j in range(2):
+                self.t += 1
+                c = self.select(self.population[self.t-1])
+                cp = self.recombine(c)
+                cpp = self.mutate(cp)
+                newpop = self.replace(cpp,self.population[self.t-1])
+                self.population.append(newpop)
+                fit.append(self.evalFit(self.population[self.t], self.dataset.test_set[i]))
+                print(fit[self.t])
+                if(fit[self.t] < 0.01):
+                    j = 20
+        if isRegression:
             print ("TOTAL MSE: " + str(fit[self.t]))
         else:
-            print ("TOTAL ACC: " + str(fit[self.t]/len(self.dataset.test_set)))
-            print("# of iterations: ",self.t)
-            print("# of unique indiv from pop: ",len(self.population[self.t]))
-            print("//////////")
+            print ("TOTAL ACC: " + str(fit[self.t]))
+        
+        
 
-classification = ["data/car.data","data/segmentation.data","data/abalone.data"]
-regression = ["data/machine.data","data/forestfires.csv","data/winequality-red.csv","data/winequality-white.csv"]
-
+classification = ["data/test.csv"]
+regression = ["data/machine.data"]
+for file in regression:
+    print (file)
+    tData = pre_processing.pre_processing(file)
+    trainData = dataset.dataset(tData.getData())
+    ga = GA(trainData, True)
+    ga.run(True)
 for file in classification:
     tData = pre_processing.pre_processing(file)
     trainData = dataset.dataset(tData.getData())
     print (file)
     print ("Num classes: " + str(trainData.getNumClasses()))
     ga = GA(trainData, False)
-    ga.run()
+    ga.run(False)
+    
 
-for file in regression:
-    tData = pre_processing.pre_processing(file)
-    trainData = dataset.dataset(tData.getData())
-    ga = GA(trainData, True)
-    ga.run()
+
+
 
 
 
