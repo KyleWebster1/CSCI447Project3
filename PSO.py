@@ -4,6 +4,7 @@ import numpy
 import FFN
 import pre_processing
 import dataset
+import types
 
 class particle:
 
@@ -28,12 +29,11 @@ class particle_swarm:
             self.net = FFN.FeedForwardNeuralNetwork(len(dataset.training_set[0][0]) - 1, 2, 1)
 
 
-        #initialize population
+        #initialize population and find the dimensions of the vector for creating the population
         self.population = []
-        self.initPop()
-
-        #choose random g_best vector
-        self.g_best = self.population[numpy.random.randint(0,len(self.population)-1)].state
+        self.dimensions = 0
+        for layer in self.net.layers:
+            self.dimensions += layer.weightMatrix.size
 
         #initialize tuning variables
         self.inertiaP = inertiaP
@@ -41,22 +41,20 @@ class particle_swarm:
         self.globalP = globalP
 
     def initPop(self):
-        #Find the dimensions of the vector for creating the population
-        dimensions = 0
-        for layer in self.net.layers:
-            dimensions += layer.weightMatrix.size
-
-
+        
         #Common population size is 3 * D
         self.population = []
-        for i in range(3 * dimensions):
-            self.population.append(particle(numpy.random.randn(dimensions)))
+        for i in range(3 * self.dimensions):
+            self.population.append(particle(numpy.random.randn(self.dimensions)))
             
     #train the network on the given train/test sets
     def train(self, training_set):
         iteration = 0
+        self.initPop()
+        #choose random g_best vector
+        self.g_best = self.population[numpy.random.randint(0,len(self.population)-1)].state
         #Repeat for 100 iterations
-        while (iteration < 100):
+        while (iteration < 25):
             #find the fitness of g_best vector
             fg = self.fitness(self.g_best, training_set)
 
@@ -161,11 +159,11 @@ for file in classification:
     trainData = dataset.dataset(tData.getData())
     print (file)
     print ("Num classes: " + str(trainData.getNumClasses()))
-    swarm = particle_swarm(trainData, .8, 1.5, 1, False)
+    swarm = particle_swarm(trainData, .8, .7, 1.3, False)
     swarm.run()
 
 for file in regression:
     tData = pre_processing.pre_processing(file)
     trainData = dataset.dataset(tData.getData())
-    swarm = particle_swarm(trainData, .8, 1.5, 1, True)
+    swarm = particle_swarm(trainData, .8, .7, 1.3, True)
     swarm.run()
