@@ -3,10 +3,12 @@ class dataset:
     total_set = []  # total data set
     training_set = []  # list of training sets
     test_set = []  # list of test sets (respective to training sets)
+    classes = []
 
     def __init__(self, data):
         self.total_set = data
         self.kFoldCross(10)
+        self.getClasses()
 
     def getTotalSet(self):
         return self.total_set
@@ -17,15 +19,15 @@ class dataset:
     def getTestSet(self, k):
         return self.test_set[k]
 
-    def getNumClasses(self):
-        classes = []
+    def getClasses(self):
         for t in self.total_set:
             classValue = t[-1]
-            
-            if classValue not in classes:
-                classes.append(classValue)
-                
-        return len(classes)
+
+            if classValue not in self.classes:
+                self.classes.append(classValue) 
+
+    def getNumClasses(self):
+        return len(self.classes)
 
     # k is number of training/test set pairs
     def kFoldCross(self, k):
