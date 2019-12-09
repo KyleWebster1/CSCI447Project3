@@ -61,7 +61,7 @@ class particle_swarm:
     def find_velocity(self, particle):
         x1 = numpy.multiply(self.inertiaW, particle.velocity)
         x2 = numpy.multiply(numpy.random.uniform(0,self.localW, len(particle.state)), numpy.subtract(particle.p_best, particle.state))
-        x3 = numpy.multiply(numpy.random.uniform(0,self.globhalW, len(particle.state)), numpy.subtract(self.g_best, particle.state))
+        x3 = numpy.multiply(numpy.random.uniform(0,self.globalW, len(particle.state)), numpy.subtract(self.g_best, particle.state))
         return numpy.add(numpy.add(x1, x2), x3)
 
 
@@ -69,14 +69,7 @@ class particle_swarm:
 
         self.net.setWeights(self.makeWeightMatrix(w))
 
-        mse = 0
-        for x in self.training_set:
-            y = x.copy()
-            del y[-1]
-            e = x[-1] - self.net.makePrediction(y)
-            mse += e * e
-
-        mse /= len(self.training_set)
+        mse = self.net.test(self.training_set)
 
         return mse
 
