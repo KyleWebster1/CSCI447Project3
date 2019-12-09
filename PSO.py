@@ -49,11 +49,11 @@ class particle_swarm:
                 if (fx <= p.fp_best):
                     p.p_best = p.state
                     p.fp_best = fx
-                    print("!PB: " + str(fx))
+                    #print("!PB: " + str(fx))
                     if (fx < fg):
                         self.g_best = p.state
                         fg = fx
-                        print("!!!GB " + str(fx))
+                        #print("!!!GB " + str(fx))
             for p in self.population:
                 p.velocity = self.find_velocity(p)
                 p.state = numpy.add(p.state, p.velocity)

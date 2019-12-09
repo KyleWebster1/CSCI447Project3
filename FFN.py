@@ -4,79 +4,135 @@
 # Kyle Webster
 # Greg Martin
 import random
+
 import pre_processing
 import dataset
-import numpy
+import random
+import numpy as np
+from numpy import exp, array, random, dot
 
 
-class Layer:
+class NeuralNetwork:
+    def __init__(self, numInput, numOutput, numHiddenLayers):
+        self.numInput = numInput
+        self.numOutput = numOutput
+        self.numHiddenLayers = numHiddenLayers
+        self.bias = [random.random() for _ in range(self.numHiddenLayers+1)]
+        #list of weights as size(next) by size(source)
+        self.weights = []
+        if numHiddenLayers == 0:
+            self.weights.append(np.random.randn(self.numInput, self.numOutput))
+        else:
+            #makes network of input + number of hidden layers
+            for i in range(numHiddenLayers+1):
+                #Shape is input layer to hidden layer is same
+                self.weights.append(np.random.randn(self.numInput, self.numInput))
+        #shape is input layer size to output layer size
+        self.weights.append(np.random.randn(self.numInput, self.numOutput))
 
-    def __init__(self,weightMatrix, isLast):
-        self.weightMatrix = weightMatrix
-        self.isLast = isLast
-        self.layerOutput = []
+    def getWeights(self):
+        return self.weights
 
-    def feedForward(self, nodeInput):
+    def updateWeights(self, newWeights):
+        self.weights = newWeights
 
-        v = numpy.matmul(nodeInput, self.weightMatrix)
-        if self.isLast:
-            v = [v]
+    #Set to true for sigmoid derivative
+    def sigmoid(self, input, deriv= False):
+        if (deriv == True):
+            return input*(1-input)
+        return 1 / (1 + np.exp(-input))
 
-        v = self.sigmoid(v)
-        return v
+    def feedForward(self, input):
+        merge = np.dot(input, self.weights[0]) + self.bias[0]
+        sig = self.sigmoid(merge)
+        for hLayer in range(1, self.numHiddenLayers+1):
+            merge = np.dot(sig, self.weights[hLayer]) + self.bias[hLayer]
+            sig = self.sigmoid(merge)
+        merge = np.dot(sig, self.weights[-1]) + self.bias[-1]
+        return self.sigmoid(merge)
 
-    def backPropDelta(self, output, expected):
-
-        matrix = numpy.transpose(self.weightMatrix)
+    def backprop(self, input, trueValues, output):
+        outputError = np.square(np.subtract(trueValues, output)).mean()
         delta = []
-        for i in range(len(matrix)):
-            delta.append(numpy.multiply(matrix[i], self.sigDeriv(output)))
+        delta.append = outputError * self.sigmoid(output, deriv=True)
+        lastWError = delta.dot(self.weights[0].T)
+        for hlayer in reversed(range(self.numHiddenLayers)):
+            pass
 
-        return numpy.transpose(delta)
+        for hLayer in range(1, self.numHiddenLayers):
+            delta = outputError * self.sigmoid(outputError, deriv=True)
 
-    def sigmoid(self, input):
-        for i in range(len(input)):
-            input[i] = 1 / (1 + numpy.exp(-input[i]))
-        return input
+    def MSELoss(self, true, pred):
+        return np.mean(np.square(true - pred))
 
-    def sigDeriv(self, output):
-        for i in range(len(output)):
-            output[i] = output[i] * (1 - output[i])
-        return output
+    def train(self, input, true):
+        output = self.feedForward(input)
+        self.backprop(input, true, output)
 
 
 
-class FeedForwardNeuralNetwork:
-    #Inspired from code from hackermoon.com blogpost by Niranjan Kumar
-    def __init__(self, inputs, outputs, hiddenLayers):
-        self.input = inputs
-        self.outputNumber = outputs
-        self.numberLayers = hiddenLayers + 1
 
-        self.layers = []
 
-        for i in range(self.numberLayers - 1):
-            self.layers.append(Layer(numpy.random.rand(inputs, inputs), False))
-        self.layers.append(Layer(numpy.random.rand(outputs,inputs), True))
+if __name__ == '__main__':
+    nn = NeuralNetwork(2, 1, 2)
+    for blank in range(10):
+        print(nn.feedForward([blank, blank]))
 
-    def makePrediction(self, x):
-        #print(x)
-        i = 0
-        for layer in self.layers:
-            x = layer.feedForward(x)
-            #print(str(i) + " " + str(x))
-            i += 1
 
-        if self.outputNumber == 1:
-            return x[0]
 
-        #print(pred)
-        #print(self.weight)
-        return x
 
-    def setWeights(self, weightMatricies):
-        for i in range(len(self.layers)):
-            self.layers[i].weightMatrix = weightMatricies[i]
+# #Attempt 1
+# def sigmoid(input):
+#     return 1 / (1 + exp(-input))
+#
+#
+# def derSigmoid(input):
+#     s = sigmoid(input)
+#     return s * (1 - s)
+#
+# class Neuron:
+#     def __init__(self, bias):
+#         self.bias = bias
+#         self.weights = []
+#
+#     def calc_output(self, input):
+#         self.input = input
+#         self.output = sigmoid(sum([_input * weight for _input, weight in zip(input, self.weights)]))
+#         return self.output
+#
+# class NeuronLayer:
+#     def __init__(self, num):
+#         self.num = num
+#         self.bias = random.random()
+#         self.neurons = [Neuron(self.bias) for _ in range(self.num)]
+#
+#     def forward(self, input):
+#         return [neuron.calc_output(input) for neuron in self.neurons]
+#
+# class NeuralNetwork:
+#     def __init__(self, numInput, numHidden, numOutput):
+#         self.numInput = numInput
+#         self.hiddenLayer = NeuronLayer(numHidden)
+#         self.outputLayer = NeuronLayer(numOutput)
+#         self.numHidden = numHidden
+#         self.initWeight()
+#
+#     def initWeight(self):
+#         for neuron in self.hiddenLayer.neurons:
+#             neuron.weights = [random.random() for _ in range(self.numInput)]
+#
+#         for neuron in self.outputLayer.neurons:
+#             neuron.weights = [random.random() for _ in range(self.numHidden)]
+#
+#     def feedForward(self, input):
+#         hiddenLayerOutput = self.hiddenLayer.forward(input)
+#         return self.outputLayer.forward(hiddenLayerOutput)
+#
+# if __name__ == '__main__':
+#     nn = NeuralNetwork(2, 2, 2)
+#     for blank in range(10):
+#         print(nn.feedForward([.5, .1]))
+
 """
     # Backpropagate error and store in neurons
     def backward_propagate_error(self, expected):

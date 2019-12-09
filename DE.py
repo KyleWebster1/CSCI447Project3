@@ -114,9 +114,9 @@ class differentialEvolutionL:
 
         return mse
 
-tData = pre_processing.pre_processing("data/car.data")
+tData = pre_processing.pre_processing("data/forestfires.csv")
 trainData = dataset.dataset(tData.getData())
-net = FFN.FeedForwardNeuralNetwork(len(trainData.getTrainingSet(0)) - 1, trainData.getNumClasses(), 2)
+net = FFN.FeedForwardNeuralNetwork(len(trainData.getTrainingSet(0)[0]) - 1, 1, 2)
 newWeights = differentialEvolutionL(trainData.getTrainingSet(0), trainData.getTestSet(0), .2, .76, net, 25, 20)
 print(newWeights.train)
 net.setWeights(newWeights.makeWeightMatrix(newWeights.train))
